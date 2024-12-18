@@ -1,6 +1,7 @@
-﻿namespace GPO BLAZOR.Client.Class.Field
+﻿namespace GPO_BLAZOR.Client.Class.Field
 {
-    public class UGRNU
-{
-}
+    public partial class UGRNU : Field
+    {
+        private string SearchField { get; set; }
+    }
 }
