@@ -104,11 +104,33 @@ namespace GPO_BLAZOR.Client.Class.Field
                 }))).ToDictionary();
                 foreach (var temp in structures)
                 {
-                    Names[temp.Key].Set(temp.Value);
+                    if (Names.ContainsKey(temp.Key))
+                    {
+#if DEBUG
+                        Console.WriteLine($"Keys Pair :{temp.Key} : {temp.Value}");
+#endif
+                        Names[temp.Key].Set(temp.Value);
+                    }
                 }
-                pdfDocumentRenderer.Document = doc.Render();
-            //pdfDocumentRenderer.Document = pdfrend;
-                pdfDocumentRenderer.RenderDocument();
+                try
+                {
+                    pdfDocumentRenderer.Document = doc.Render();
+                    //pdfDocumentRenderer.Document = pdfrend;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error printPdf3 -> " + ex.Message);
+                }
+                try
+                {
+                    pdfDocumentRenderer.RenderDocument();
+                    //pdfDocumentRenderer.Document = pdfrend;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error printPdf4 -> " + ex.Message);
+                }
+                
             }
             catch (Exception ex)
             {

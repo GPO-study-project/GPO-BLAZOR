@@ -18,7 +18,6 @@ namespace GPO_BLAZOR.Client
             builder.Services.AddScoped<LocalStorageAccessor>();
             builder.Services.AddScoped<PdfDocumentRenderer>();
 
-
             var app = builder.Build();
 
 
@@ -30,7 +29,7 @@ namespace GPO_BLAZOR.Client
 
             //Console.WriteLine("BaseAddress "+ c);
 
-
+            //app.UseCors(builder => builder.WithOrigins("https://surnameonline.ru/").WithMethods("POST").AllowAnyHeader());
 
             await app.RunAsync();
         }

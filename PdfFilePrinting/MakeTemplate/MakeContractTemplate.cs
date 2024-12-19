@@ -39,7 +39,7 @@ namespace PdfFilePrinting.MakeTemplate
                                 text = new BaseElement[]
                             {
                                 new RawText { TextValue = "Договор о практической подготовке обучающихся в форме практики №" },
-                                new InjectElement { Name = "ContractNumber", TextValue = "1" },
+                                new InjectElement { Name = "ContractNumber" },
                             }
                             },
                             new Table()
@@ -84,7 +84,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             new InjectElement()
                                                             {
                                                                 Name = "ContractDate",
-                                                                TextValue = $"{DateTime.Now.Day}.{DateTime.Now.Month}.{DateTime.Now.Year}"
+                                                                //TextValue = $"{DateTime.Now.Day}.{DateTime.Now.Month}.{DateTime.Now.Year}"
                                                             },
                                                             new RawText()
                                                             {
@@ -105,9 +105,9 @@ namespace PdfFilePrinting.MakeTemplate
                                 text = new BaseElement[]
                                 {
                                     new RawText {TextValue = ("Федеральное государственное автономное образовательное учреждение высшего образования «Томский государственный университет систем управления и радиоэлектроники» (ТУСУР), именуемое в дальнейшем «Университет», в лице директора центра карьеры И.А. Трубчениновой, действующего на основании доверенности от 19.09.2024 №20/3460, с одной стороны, и " )},
-                                    new InjectElement() {Name = "FactoryName", TextValue="ООО ДИВИЛАЙН" } ,
+                                    new InjectElement() {Name = "FactoryName" }, //TextValue="ООО ДИВИЛАЙН" } ,
                                     new RawText {TextValue = (" именуемое в дальнейшем «Профильная организация», в лице действующего на основании ")},
-                                    new InjectElement() {Name="OrganizationRule", TextValue=" Устав организации "},
+                                    new InjectElement() {Name="OrganizationRule" },// TextValue=" Устав организации "},
                                     new RawText() {TextValue = " именуемые по отдельности «Сторона», а вместе «Стороны», заключили настоящий Договор о нижеследующем."}
                                 }
                             },
@@ -128,7 +128,7 @@ namespace PdfFilePrinting.MakeTemplate
                                 text = new BaseElement[]
                                 {
                                     new RawText {TextValue = "1.1 Предметом настоящего Договора является организация практической подготовки в форме практики обучающихся (далее – практика) по направлениям подготовки/специальностям: "},
-                                    new InjectElement {Name="DerictionType", TextValue="Информационная безопасность "},
+                                    new InjectElement {Name="DerictionType" },//, TextValue="Информационная безопасность "},
                                 }
                             },
                             new Paragrapf()
@@ -388,7 +388,7 @@ namespace PdfFilePrinting.MakeTemplate
                                 Alignment= ParagraphAlignment.Center,
                                 text = new BaseElement[]
                                 {
-                                    new RawText {TextValue = "3 Срок действия договора\n\r"}
+                                    new RawText {TextValue = "3 Срок действия договора"}
                                 }
                             },
                             new Paragrapf()
@@ -535,7 +535,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "ООО ДиВиЛайн",
+                                                                //TextValue = "ООО ДиВиЛайн",
                                                                 Name = "FactoryName"
                                                             }
                                                         }
@@ -585,7 +585,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             },
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "634050, г. Томск, ул. Вершинина, 36",
+                                                                //TextValue = "634050, г. Томск, ул. Вершинина, 36",
                                                                 Name = "FactoryLocation"
                                                             }
                                                         }
@@ -631,7 +631,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "Директор",
+                                                                //TextValue = "Директор",
                                                                 Name = "FactoryRank"
                                                             }
                                                         }
@@ -780,7 +780,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                                                 {
                                                                                     new InjectElement()
                                                                                     {
-                                                                                        TextValue = "Иванов Иван Иванович",
+                                                                                        //TextValue = "Иванов Иван Иванович",
                                                                                         Name = "FactoryLeaderName"
                                                                                     }
                                                                                 }
@@ -1031,7 +1031,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new MyltiplyInjectElement()
                                                             {
-                                                                Map = new[] { "Ин|фор|ма|ци|он|ная бе|зо|пас|ность".Replace('|', '\u00AD'), "Бе|зо|пас|ность те|ле|ком|му|ни|ка|ци|он|ных сис|тем".Replace('|','\u00AD')},
+                                                                //Map = new[] { "Ин|фор|ма|ци|он|ная бе|зо|пас|ность".Replace('|', '\u00AD'), "Бе|зо|пас|ность те|ле|ком|му|ни|ка|ци|он|ных сис|тем".Replace('|','\u00AD')},
                                                                 Name = "DerictionType"
                                                             },
                                                         }
@@ -1048,7 +1048,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new InjectElement()
                                                             {
-                                                                TextValue =  "Про|из|вод|ствен|ная".Replace('|','\u00AD'),
+                                                                //TextValue =  "Про|из|вод|ствен|ная".Replace('|','\u00AD'),
                                                                 Name = "Practic Type"
                                                             }
                                                         }
@@ -1082,17 +1082,25 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new MyltiplyInjectElement()
                                                             {
-                                                                Map = new[] { "Реп|ни|ков Ни|ки|та Ива|но|вич".Replace('|', '\u00AD'), "Та|та|ри|нов Мак|сим Де|ни|со|вич".Replace('|','\u00AD')},
+                                                                //Map = new[] { "Реп|ни|ков Ни|ки|та Ива|но|вич".Replace('|', '\u00AD'), "Та|та|ри|нов Мак|сим Де|ни|со|вич".Replace('|','\u00AD')},
                                                                 Name = "StudentName"
+                                                            },
+                                                            new RawText
+                                                            {
+                                                                TextValue = " "
                                                             },
                                                             new InjectElement()
                                                             {
-                                                                TextValue = " 3 курс ",
+                                                                //TextValue = "3",
                                                                 Name = "Curse"
+                                                            },
+                                                            new RawText
+                                                            {
+                                                                TextValue = " курс"
                                                             },
                                                             new MyltiplyInjectElement()
                                                             {
-                                                                Map = new[] { "711-1","731-1"},
+                                                                //Map = new[] { "711-1","731-1"},
                                                                 Name = "Group"
                                                             },
                                                         }
@@ -1108,11 +1116,19 @@ namespace PdfFilePrinting.MakeTemplate
                                                     {
                                                         text = new BaseElement[]
                                                         {
+                                                            new RawText()
+                                                            {
+                                                                TextValue = " "
+                                                            },
                                                             new InjectElement()
                                                             {
-                                                                TextValue = " 2 недели ",
+                                                                //TextValue = " 2 недели ",
                                                                 Name = "TimePrepand"
                                                             },
+                                                            new RawText()
+                                                            {
+                                                                TextValue = "дня"
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1201,7 +1217,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             new InjectElement()
                                                             {
                                                                 Name = "Cafedral Practic Leader",
-                                                                TextValue = "Новохрёстов Алексей Константинович"
+                                                                //TextValue = "Новохрёстов Алексей Константинович"
                                                             }
                                                         }
                                                     }
@@ -1308,7 +1324,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             new InjectElement()
                                                             {
                                                                 Name= "Factory Practic Leader Name",
-                                                                TextValue = "Иванов Иван Иванович"
+                                                                //TextValue = "Иванов Иван Иванович"
                                                             }
                                                         }
                                                     }
@@ -1452,7 +1468,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             new MyltiplyInjectElement()
                                                             {
                                                                 Name = "WorksRooms",
-                                                                Map = new[]{"Ауди|то|рия 100".Replace('|', '\u00AD') }
+                                                                //Map = new[]{"Ауди|то|рия 100".Replace('|', '\u00AD') }
                                                             }
                                                         }
                                                     }
@@ -1469,7 +1485,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             new MyltiplyInjectElement()
                                                             {
                                                                 Name = "WorkRoomAddress",
-                                                                Map = new[]{ "634050, г. Томск, ул. Вер|ши|ни|на, 36".Replace('|', '\u00AD') }
+                                                                //Map = new[]{ "634050, г. Томск, ул. Вер|ши|ни|на, 36".Replace('|', '\u00AD') }
 
                                                             },
                                                         }
@@ -1487,7 +1503,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             new MyltiplyInjectElement()
                                                             {
                                                                 Name = "Practic Type",
-                                                                Map = new[]{ "Про|из|водст|вен|ная прак|ти|ка".Replace('|', '\u00AD') }
+                                                                //Map = new[]{ "Про|из|водст|вен|ная прак|ти|ка".Replace('|', '\u00AD') }
                                                             },
                                                         }
                                                     }
@@ -1504,7 +1520,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                             new MyltiplyInjectElement()
                                                             {
                                                                 Name = "Practic Used Tools",
-                                                                Map = new[]{ "Ра|бо|чий компь|ю|тер" }.Select(x=>x.Replace('|', '\u00AD')).ToArray()
+                                                                //Map = new[]{ "Ра|бо|чий компь|ю|тер" }.Select(x=>x.Replace('|', '\u00AD')).ToArray()
                                                             },
                                                         }
                                                     }
@@ -1654,7 +1670,7 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = $"{DateTime.Now.Day.ToString()}.{DateTime.Now.Month.ToString()}.{DateTime.Now.Year.ToString()}",
+                                        //TextValue = $"{DateTime.Now.Day.ToString()}.{DateTime.Now.Month.ToString()}.{DateTime.Now.Year.ToString()}",
                                         Name = "ContractDate"
                                     },
                                     new RawText()
@@ -1663,7 +1679,7 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "1",
+                                        //TextValue = "1",
                                         Name = "ContractNumber"
                                     },
                 }
@@ -1764,7 +1780,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "Директор",
+                                                                //TextValue = "Директор",
                                                                 Name = "FactoryRank"
                                                             }
                                                         }
@@ -1825,7 +1841,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                                                 {
                                                                                     new InjectElement()
                                                                                     {
-                                                                                        TextValue = "И.А. Трубчинова",
+                                                                                        //TextValue = "И.А. Трубчинова",
                                                                                         Name = "CafedralPracticFielderLeader"
                                                                                     }
                                                                                 }
@@ -1912,7 +1928,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                                                 {
                                                                                     new InjectElement()
                                                                                     {
-                                                                                        TextValue = "Иванов Иван Иванович",
+                                                                                        //TextValue = "Иванов Иван Иванович",
                                                                                         Name = "FactoryLeaderName"
                                                                                     }
                                                                                 }

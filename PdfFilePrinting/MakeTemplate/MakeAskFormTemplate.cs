@@ -33,7 +33,6 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "КИБЭВС",
                                         Name = "Cafedral"
                                     },
                                     new RawText()
@@ -42,7 +41,7 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "Шелупанову Александру Александровичу",
+                                        WordCase = WordCase.Dative,
                                         Name = "Cafedral Leader"
                                     },
                                     new RawText()
@@ -51,7 +50,6 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "711-1",
                                         Name = "Group"
                                     },
                                     new RawText()
@@ -60,7 +58,7 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "Репникова Никиты Ивановича",
+                                        WordCase = WordCase.Genitive,
                                         Name = "StudentName"
                                     },
                                 }
@@ -93,17 +91,7 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "Производственной практики",
                                         Name = "Practic Type"
-                                    },
-                                    new RawText()
-                                    {
-                                        TextValue = ": "
-                                    },
-                                    new InjectElement()
-                                    {
-                                        TextValue = "Эксплуатационной практики",
-                                        Name = "Practic Sort"
                                     },
                                     new RawText()
                                     {
@@ -111,7 +99,6 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "ООО \"ДИВИЛАЙН\"",
                                         Name = "FactoryName"
                                     },
                                     new RawText()
@@ -120,7 +107,6 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = "ул. Вершинина д. 46/1",
                                         Name = "FactoryAdress"
                                     },
                                     new RawText()
@@ -129,7 +115,7 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = $"{DateTime.Now.Day}.{DateTime.Now.Month}.{DateTime.Now.Year}",
+                                        //TextValue = $"{DateTime.Now.Day}.{DateTime.Now.Month}.{DateTime.Now.Year}",
                                         Name = "StartDate"
                                     },
                                     new RawText()
@@ -138,7 +124,7 @@ namespace PdfFilePrinting.MakeTemplate
                                     },
                                     new InjectElement()
                                     {
-                                        TextValue = $"{(DateTime.Now.AddDays(14)).Day}.{(DateTime.Now.AddDays(14)).Month}.{(DateTime.Now.AddDays(14)).Year}",
+                                        //TextValue = $"{(DateTime.Now.AddDays(14)).Day}.{(DateTime.Now.AddDays(14)).Month}.{(DateTime.Now.AddDays(14)).Year}",
                                         Name = "EndDate"
                                     },
                                 }
@@ -173,7 +159,7 @@ namespace PdfFilePrinting.MakeTemplate
                                                         new InjectElement()
                                                         {
                                                             Name = "AskFormTime",
-                                                            TextValue = $"{DateTime.Now.Day}.{DateTime.Now.Month}.{DateTime.Now.Year}"
+                                                            //TextValue = $"{DateTime.Now.Day}.{DateTime.Now.Month}.{DateTime.Now.Year}"
                                                         }
                                                     }
                                                 }
@@ -268,7 +254,6 @@ namespace PdfFilePrinting.MakeTemplate
                                                             },
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "КИБЭВС",
                                                                 Name = "Cafedral"
 
                                                             },
@@ -309,7 +294,6 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "Шелупанов Александр Александрович",
                                                                 Name = "Cafedral Leader"
                                                             },
                                                         }
@@ -336,11 +320,10 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new RawText()
                                                             {
-                                                                TextValue = "Зав. кафедрой "
+                                                                TextValue = "Руководитель практики от университета "
                                                             },
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "КИБЭВС",
                                                                 Name = "Cafedral"
 
                                                             },
@@ -381,7 +364,6 @@ namespace PdfFilePrinting.MakeTemplate
                                                         {
                                                             new InjectElement()
                                                             {
-                                                                TextValue = "Новохрёстов Алексей Константинович",
                                                                 Name = "Cafedral Practic Leader"
                                                             },
                                                         }

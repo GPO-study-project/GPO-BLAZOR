@@ -8,18 +8,19 @@
         </h2>
         @foreach (IBlock temp in Date.Date)
         {
-            <Block Date="temp" />
+            <Block Date="temp" ID=@ID/>
         }
     }
     else
     {
-        
+
     }
 </body>
 
 @code {
     [Parameter]
     public IPage Date { get; set; }
+    [Parameter]
+    public string? ID { get; init; }
 
-    
 }

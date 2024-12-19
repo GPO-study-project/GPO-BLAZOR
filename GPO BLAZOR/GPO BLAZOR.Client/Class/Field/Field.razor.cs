@@ -10,6 +10,7 @@ namespace GPO_BLAZOR.Client.Class.Field
 
         protected override Task OnAfterRenderAsync(bool firstRender)
         {
+            
             return base.OnAfterRenderAsync(firstRender);
         }
     }

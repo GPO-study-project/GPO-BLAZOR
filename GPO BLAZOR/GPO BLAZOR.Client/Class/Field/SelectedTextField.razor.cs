@@ -14,12 +14,19 @@ namespace GPO_BLAZOR.Client.Class.Field
         [Inject]
         public IJSRuntime JSRuntime {get; set;}
 
+        [Parameter]
+        public string? IDValue { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             IsLoading = false;
             try
             {
-                collection = (Date is not null)?await CollectionValues.Create(Date.Id, JSRuntime) :collection;
+                if (collection is null)
+                {
+                    Console.WriteLine("CollectionIsNull");
+                    collection = await CollectionValues.Create(Date.Id, JSRuntime, IDValue);
+                }
             }
             finally
             {
@@ -31,9 +38,15 @@ namespace GPO_BLAZOR.Client.Class.Field
         {
             try
             {
-                if (collection == null) 
-                    collection = await CollectionValues.Create(Date.Id, JSRuntime);
-                
+                if (collection is null)
+                {
+                    Console.WriteLine("CollectionIsNull");
+                    collection = await CollectionValues.Create(Date.Id, JSRuntime, IDValue);
+                }
+                if (collection.Values.Count()==1)
+                {
+                    Date.value = collection.Values[0];
+                }
 
             }
             catch (Exception ex)

@@ -11,11 +11,11 @@ namespace GPO_BLAZOR.Client.Class.Date
     public record CollectionValues
     {
         
-
-        private CollectionValues(string[] value)
+        string? ID { get; set; }
+        private CollectionValues(string[] value, string? ID = null)
         {
 
-
+            this.ID = ID;
             if (value != null)
                 Values = value;
             else Values = null;
@@ -23,14 +23,14 @@ namespace GPO_BLAZOR.Client.Class.Date
 
         public string[] Values { get; init; }
 
-        public static async Task<CollectionValues> Create(string Name, IJSRuntime jsr)
+        public static async Task<CollectionValues> Create(string Name, IJSRuntime jsr, string? ID = null)
         {
-            return new CollectionValues(await GetAtributes(Name, jsr));
+            return new CollectionValues(await GetAtributes(Name, jsr, ID));
         }
 
-        private static async Task<string[]> GetAtributes(string Field, IJSRuntime jsr)
+        private static async Task<string[]> GetAtributes(string Field, IJSRuntime jsr, string? ID = null)
         {
-            return await Requesting.AutorizationedGetRequest<string[]>(new Uri($"https://{IPaddress.IPAddress}/GetAtributes/{Field}"), jsr);
+            return await Requesting.AutorizationedGetRequest<string[]>(new Uri($"https://{IPaddress.IPAddress}/GetAtributes/{Field}{(ID is null?"":$"?ID={ID}")}"), jsr);
         }
 
     }

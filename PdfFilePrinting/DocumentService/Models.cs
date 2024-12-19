@@ -11,6 +11,15 @@ using static System.Net.Mime.MediaTypeNames;
 using static MigraDoc.DocumentObjectModel.Text;
 using System.ComponentModel;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Xml.Linq;
+using System.Security.Cryptography;
+//using GPO_BLAZOR.Client.Class;
+
+using System.Net.Http.Json;
+using System.Net;
+using System;
 
 namespace PdfFilePrinting.DocumentService
 {
@@ -537,6 +546,9 @@ namespace PdfFilePrinting.DocumentService
         {
 
         }
+        [DefaultValue(WordCase.Nominative)]
+        [XmlAttribute]
+        public WordCase WordCase { get; set; } = WordCase.Nominative;
         [XmlAttribute]
         [DefaultValue(false)]
         public bool SpecialLine { get; set; } = false;
@@ -546,8 +558,6 @@ namespace PdfFilePrinting.DocumentService
         [XmlAttribute]
         [DefaultValue(false)]
         public bool SubScript { get; set; } = false;
-        [XmlText]
-        public abstract string TextValue { get; set; }
         public void Render(in Paragraph paragraph)
         {
             var formatedText = paragraph.AddFormattedText($"{TextValue}");
@@ -561,9 +571,58 @@ namespace PdfFilePrinting.DocumentService
             }
         }
 
+        protected static async Task<string> ChangeForm(WordCase wordCase, string Name)
+        {
+            using (HttpClient httpClient = new HttpClient())
+            {
+
+                httpClient.BaseAddress = new Uri($"https://localhost:3001/CaseWaord?wordCase={wordCase}&Name={Name}");
+                //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress);
+  
+                var tempresponce = await httpClient.SendAsync(requestMessage);
+
+                return (await tempresponce.Content.ReadFromJsonAsync<string>());
+            }
+
+        }
+
+        [XmlIgnore]
+        private string _textValue;
+
+        [XmlText]
+        public virtual string TextValue
+        {
+            get
+            {
+                if (WordCase == WordCase.Nominative)
+                    return _textValue;
+                var task = ChangeForm(WordCase, _textValue);
+                task.Wait();
+                if (task.IsCompleted)
+                    return task.Result;
+                task = ChangeForm(WordCase, _textValue);
+                task.Wait();
+                return task.Result;
+            }
+            set
+            {
+                _textValue = value;
+            }
+        }
+
         public abstract (string  Name, Func<string> getter, Action<string> setter)? GetName();
     }
 
+   public enum WordCase
+    {
+        Nominative = 0,
+        Genitive = 1,
+        Dative = 2,
+        Accusative = 3,
+        Ablative = 4,
+        Prepositional = 5
+    }
 
     [JsonDerivedType(typeof(MyltiplyInjectElement), "MyltiplyInjectElement")]
     [XmlType("InjectElement")]
@@ -576,8 +635,7 @@ namespace PdfFilePrinting.DocumentService
 
         [XmlAttribute]
         public string Name { get; set; }
-        [XmlText]
-        public override string TextValue { get; set; }
+        
 
         public override (string, Func<string>, Action<string>)? GetName()
         {
@@ -585,6 +643,8 @@ namespace PdfFilePrinting.DocumentService
             var getter = (string val) => { TextValue = val; };
             return (Name, setter, getter);
         }
+
+        
     }
     [XmlType("MyltiplyInjectElement")]
     public class MyltiplyInjectElement: InjectElement
@@ -593,7 +653,7 @@ namespace PdfFilePrinting.DocumentService
         [XmlArray("TextValue")]
         public string[] Map 
         { 
-            get => map2.ToArray(); 
+            get => map2 is not null ? map2.ToArray() : null; 
             set{ 
                 map = new Stack<string>(value); 
                 map2 = new Stack<string>(value); 
@@ -607,6 +667,8 @@ namespace PdfFilePrinting.DocumentService
         [XmlIgnore]
         public override string TextValue { get 
             {
+                if (map2 is null)
+                    return null;
                 string result;
                 if (map.TryPop(out result))
                 {
@@ -640,8 +702,6 @@ namespace PdfFilePrinting.DocumentService
         {
 
         }
-        [XmlText]
-        public override string TextValue { get; set; }
 
         public override (string, Func<string>, Action<string>)? GetName()
         {

@@ -38,6 +38,13 @@ using PdfSharp.Pdf.Content;
 using PdfSharp.Pdf;
 using PdfSharp.Fonts;
 using System.IO.Compression;
+using System.Linq.Expressions;
+using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using System.Text.Json.Nodes;
+using System.Xml.Linq;
+using PdfFilePrinting.DocumentService;
+using static Azure.Core.HttpHeader;
 
 
 
@@ -275,7 +282,8 @@ namespace GPO_BLAZOR
         public static void Main(string[] args)
         {
 
-            {
+
+            /*{
                 var tyop = new PdfDocumentRenderer();
 
                 /*FileStream fstreams = new FileStream("./file1.pdf", FileMode.Open);
@@ -301,7 +309,7 @@ namespace GPO_BLAZOR
                         //(Encoding.Default.GetString(memoryStream.ToArray())); 
                     }
                
-                */
+                *//*
             tyop.PdfDocument = PdfSharp.Pdf.IO.PdfReader.Open("./Pdf5.pdf", PdfSharp.Pdf.IO.PdfDocumentOpenMode.ReadOnly);
 
                 PdfPage SamplePage = tyop.PdfDocument.Pages[0];
@@ -342,19 +350,19 @@ namespace GPO_BLAZOR
                 byte[] inputBuffer = Encoding.Default.GetBytes(JSONSer);
 
                 str.Write(inputBuffer, 0, inputBuffer.Length);
-                str.Close();
+                str.Close();*/
 
 
-                XmlSerializer xmlSerializered = new(typeof(Document));
-                str = new FileStream("person.xml", FileMode.Create);
+                /*XmlSerializer xmlSerializered = new(typeof(Document));
+                FileStream str = new FileStream("person.xml", FileMode.Create);
 
             // ïîëó÷àåì ïîòîê, êóäà áóäåì çàïèñûâàòü ñåðèàëèçîâàííûé îáúåêò
-                var rest = PdfFilePrinting.MakeTemplate.MakeContractTemplate.Make();
+                var rest = PdfFilePrinting.MakeTemplate.MakeAskFormTemplate.Make();
 
-                xmlSerializered.Serialize(str, rest);
+                xmlSerializered.Serialize(str, rest);*/
 
 
-                var rtfRender = new RtfDocumentRenderer();
+                /*var rtfRender = new RtfDocumentRenderer();
                 rtfRender.Render(PdfFilePrinting.MakeTemplate.MakeContractTemplate.Make().Render(), "Contract.rtf", "./");
 
 
@@ -383,7 +391,7 @@ namespace GPO_BLAZOR
             AllowTrailingCommas = true,
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
 
-        };
+        };*/
             //TestPrinter.F(new FileStream("./file123.pdf", FileMode.OpenOrCreate));
 /*
             FileStream fstream = new FileStream("person.xml", FileMode.Open);
@@ -509,6 +517,8 @@ namespace GPO_BLAZOR
             builder.Services.AddControllers()
                 .AddXmlSerializerFormatters();
 
+
+
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
             {
@@ -516,7 +526,16 @@ namespace GPO_BLAZOR
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
-
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("MyPolicy", opt =>
+                {
+                    opt.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                        //.AllowCredentials();
+                });
+            });
 
             builder.Services.AddScoped<AuthenticationStateProvider, IdentetyAuthenticationStateProvider>();
 
@@ -542,7 +561,7 @@ namespace GPO_BLAZOR
             //builder.Services.AddAuthorizationCore();
 
             var app = builder.Build();
-
+            app.UseRouting();
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -592,12 +611,55 @@ namespace GPO_BLAZOR
             app.UseCookiePolicy();
             app.UseStaticFiles();
             app.UseAntiforgery();
+            app.UseAuthorization();
 
+            app.UseCors("MyPolicy");
+
+            app.MapGet("/CaseWaord", async (PdfFilePrinting.DocumentService.WordCase wordCase, string Name) =>
+                {
+                    if (Name is null)
+                    {
+                        return Name;
+                    }
+                    HttpClient htpc = new HttpClient();
+                    htpc.BaseAddress = new Uri("https://surnameonline.ru");
+                    htpc.DefaultRequestHeaders.Host = "surnameonline.ru";
+                    htpc.DefaultRequestHeaders.Add("Origin", new[] { "https://surnameonline.ru" });
+                    htpc.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+                    htpc.DefaultRequestHeaders.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("UTF8"));
+                    //htpc.DefaultRequestHeaders.Add("Content-Type", new[] { , "charset=UTF-8" });
+                    htpc.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
+                    htpc.DefaultRequestHeaders.Add("mode", "no-cors");
+                    htpc.DefaultRequestHeaders.Add("Access-Control-Allow-Origin", "*");
+
+                    htpc.DefaultRequestHeaders.Referrer = new Uri("https://surnameonline.ru");
+                    //htpc.DefaultRequestHeaders.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+                    htpc.BaseAddress = new Uri("https://surnameonline.ru/");
+                    string[] Values = Name.Split(' ');
+                    if (Values.Length < 3)
+                    { Values = new string[3] { "Иван", "Иванов", "Иванович" }; };
+                    string responce = $"name={Values[0]}&surname={Values[1]}&patronymic={Values[2]}";
+#if DEBUG
+                    Console.WriteLine(responce);
+#endif
+                    var result = await htpc.PostAsync("/inflect.php", new StringContent(responce,
+                                                        Encoding.UTF8,
+                                                        "application/x-www-form-urlencoded"));
+
+
+                    var result3 = await result.Content.ReadAsStringAsync();
+
+
+                    XDocument xdoc = XDocument.Parse($"<Document>{result3}</Document>");
+                    var xelements = xdoc.Element("Document").Element("ul").Elements("li").ToArray();
+                    var resultxml = xelements.Select(x => (x.Value)).ToArray();
+                    return resultxml[(int)wordCase];
+                });
 
             ///<summary>
             ///Выдача атрибутов для поля
             ///</summary>
-            app.MapGet("/GetAtributes/{Field}", [Authorize] async (string Field, HttpContext context, Gpo2Context cntx) =>
+            app.MapGet("/GetAtributes/{Field}", [Authorize] async (string? ID, string Field, HttpContext context, Gpo2Context cntx) =>
             {
                 try
                 {
@@ -608,6 +670,17 @@ namespace GPO_BLAZOR
                         return Results.NoContent();
                     else
                         username = Identity.Name;
+
+                    var role = context.User.Claims.First(x => x.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Value.Split('\n');
+                    if (!role.Contains("Student"))
+                    {
+                        var t1 = (await cntx.AskForms.FirstOrDefaultAsync(x => x.Id.ToString() == ID));
+                        var t2 = (await cntx.Students.FindAsync(t1.Student));
+                        var t3 = (await cntx.Users.FindAsync(t2.User));
+                        username = t3.Email;
+                    }
+
+
                     ///<summary>
                     ///Получения списка доступных для создания документов
                     ///</summary>
@@ -712,7 +785,6 @@ namespace GPO_BLAZOR
 
             app.MapGet("/GetAtributes", () => Results.NotFound("Atribute"));
 
-            app.Logger.LogDebug("DEBUGSTART:");
 
             ///<summary>
             ///Авторизация
@@ -823,7 +895,7 @@ namespace GPO_BLAZOR
                 }
                 else
                 {
-                    Forms = AskFormStudent.Where(x => x.Status > 2);
+                    Forms = AskFormStudent.Where(x => x.Status == 2);
                 }
 
                 var Includers = Forms.Include(x => x.ContractNavigation);
@@ -850,6 +922,10 @@ namespace GPO_BLAZOR
 
 #warning Добавить просмотр для рукводящей роли
 
+                var role = context.User.Claims.First(x => x.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Value.Split('\n');
+
+
+
                 switch (Type)
                 {
                     case "Договор":
@@ -865,6 +941,12 @@ namespace GPO_BLAZOR
                 }
 
                 var UserMail = context.User.Identity.Name;
+
+                if (!role.Contains("Student"))
+                {
+                    UserMail = (await cntx.Users.FindAsync((await cntx.Students.FindAsync((await cntx.AskForms.FirstOrDefaultAsync(x => x.Id.ToString() == ID)).Student)).User)).Email;
+                }
+
                 var User = await cntx.Users
                     .Where(x => x.Email == UserMail)
                     .Include(x => x.Student)
@@ -951,12 +1033,13 @@ namespace GPO_BLAZOR
 
                 AskForm askForm;
 
-                var role = context.User.Claims.First(x => x.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Value.Split('\n');
+
                 if (role.Contains("Student"))
                 {
                     try
                     {
                         askForm = await askFormSeq.FirstAsync(x => x.StudentNavigation.Email == UserMail && x.Id == NumID);
+
                     }
                     catch(Exception ex)
                     {
@@ -965,17 +1048,17 @@ namespace GPO_BLAZOR
                 }
                 else
                     askForm = await askFormSeq.FirstAsync(x => x.Id == NumID);
-
-                Result.Add("State", askForm.Status.ToString());
+                
                 if (askForm.Commentary is not null)
                     Result.Add("Commentary", askForm.Commentary);
 
                 switch (Type)
                 {
                     case "Заявление":
+                        Result.Add("State", askForm.Status.ToString());
                         Result.Add("Cafedral", User.Student.GroupNavigation.CafedralNavigation.EncriptedName ?? "");
-                        Result.Add("Cafedral Leader", $"{User.Student.GroupNavigation.CafedralNavigation.LeaderNavigation.LastName ?? ""} " +
-                            $"{User.Student.GroupNavigation.CafedralNavigation.LeaderNavigation.FirstName ?? ""}" +
+                        Result.Add("Cafedral Leader", $"{User.Student.GroupNavigation.CafedralNavigation.LeaderNavigation.LastName ?? ""}" +" "+
+                            $"{User.Student.GroupNavigation.CafedralNavigation.LeaderNavigation.FirstName ?? ""}" +" "+
                             $"{User.Student.GroupNavigation.CafedralNavigation.LeaderNavigation.MiddleName ?? ""}");
                         Result.Add("Group", User.Student.GroupNavigation.Groups ?? "");
                         Result.Add("StudentName", $"{User.LastName ?? ""} {User.FirstName ?? ""} {User.MiddleName ?? ""}");
@@ -993,6 +1076,7 @@ namespace GPO_BLAZOR
                     case "Договор":
                         if (askForm.ContractNavigation.Status == 0)
                             return Results.NotFound();
+                        Result.Add("State", askForm.ContractNavigation.Status.ToString());
                         Result.Add("ContractNumber", askForm.ContractNavigation.Number ?? "");
                         Result.Add("ContractDate", DateTime.Now.ToShortDateString().Replace('/', '.') ?? "");
                         Result.Add("FactoryName", askForm.ContractNavigation.OrganizationNavigation.Name ?? "");
@@ -1007,14 +1091,14 @@ namespace GPO_BLAZOR
                         Result.Add("StudentName", $"{User.LastName ?? ""} {User.FirstName ?? ""} {User.MiddleName ?? ""}");
                         Result.Add("Curse", User.Student.GroupNavigation.Cours.ToString() ?? "");
                         Result.Add("Group", User.Student.GroupNavigation.Groups ?? "");
-                        Result.Add("TimePrepand", $"{(askForm.ContractNavigation.PracticTimenNavigation.DateStart.DayNumber - (askForm.ContractNavigation.PracticTimenNavigation.DateEnd.DayNumber))} дней");
+                        Result.Add("TimePrepand", $"{(askForm.ContractNavigation.PracticTimenNavigation.DateEnd.DayNumber - (askForm.ContractNavigation.PracticTimenNavigation.DateStart.DayNumber))} дней");
 #warning Исправить
-                        Result.Add("Cafedral Practic Leader", $"{User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.LastName ?? ""}" +
-                            $" {User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.FirstName ?? ""}" +
+                        Result.Add("Cafedral Practic Leader", $"{User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.LastName ?? ""}" + " "+
+                            $" {User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.FirstName ?? ""}" + " "+
                             $" {User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.MiddleName ?? ""}");
                         Result.Add("WorksRooms", (await cntx.AskForms.FirstAsync(x => x.Id == NumID)).ContractNavigation.Room ?? "");
                         Result.Add("WorkRoomAddress", (await cntx.AskForms.FirstAsync(x => x.Id == NumID)).ContractNavigation.OrganizationNavigation.Adress ?? "");
-                        Result.Add("Practic Used Tools", (await cntx.AskForms.FirstAsync(x => x.Id == NumID)).ContractNavigation.Equipment ?? "");
+                        Result.Add("Practic Used Tools", ((await cntx.AskForms.FirstAsync(x => x.Id == NumID)).ContractNavigation.Equipment ?? new string[0]).Aggregate(new StringBuilder(),(x,y)=>x.Append('&').Append(y)).ToString() ?? "");
                         break;
                     default:
                         return Results.NotFound();
@@ -1029,71 +1113,138 @@ namespace GPO_BLAZOR
             ///<summary>
             ///Запись значений
             ///</summary>
-            app.MapPost("/getInfo", [Authorize] async (int? ID, Dictionary<string, string> UserForm, HttpContext context, Gpo2Context cntx) =>
+            app.MapPost("/getInfo", [Authorize] async (int? ID, string Template, Dictionary<string, string> UserForm, HttpContext context, Gpo2Context cntx) =>
             {
+                try { 
                 var role = context.User.Claims.First(x=>x.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Value.Split('\n');
                 var UserMail = context.User.Identity.Name;
+                var User = await cntx.Users.FirstOrDefaultAsync(x => x.Email == UserMail);
+                if (User is null)
+                {
+                    return Results.BadRequest("User Not Found");
+                }
+
+                AskForm askForm;
 
                 if (role.Contains("PracticFieldLeader"))
-                { var AskForm = (await cntx.AskForms.FindAsync(ID));
-                    AskForm.Commentary = UserForm["Commentary"] ?? "";
-                    cntx.AskForms.Update(AskForm);
-                    await cntx.SaveChangesAsync();
-                }
-                   
-                
-
-                switch (UserForm["Template"])
-                {
-                    case "Contract":
-                        var contract = cntx.Contracts.Include(x=>x.OrganizationNavigation);
-                        //
+                { 
+                    askForm = (await cntx.AskForms.FindAsync(ID));
+                    askForm.Commentary = UserForm["Commentary"] ?? "";
+                    switch (Template)
                         {
-                            var DoubledContract = await cntx.Contracts
-                                .FirstOrDefaultAsync(x => x.OrganizationNavigation.Name == UserForm["FactoryName"] 
-                                    && x.OrganizationNavigation.Adress == UserForm["FactoryLocation"]);
-                            ///Ожидается ошибка, если в договор уже записана AskForm
-                            if (DoubledContract != null)
-#warning Добавить Руководителя практики от организации ^
-                            {
-                                var askForm = await cntx.AskForms
-                                    .Include(x=>x.StudentNavigation)
-                                    .FirstAsync(x => x.Id == ID.Value && x.StudentNavigation.Email == UserMail);
-                                DoubledContract.AskForms.Add(askForm);
-                                cntx.AskForms.Update(askForm);
-                                cntx.Contracts.Update(DoubledContract);
-                                await cntx.SaveChangesAsync();
-                                Results.Ok("sucsefull");
-                            }
-                            var Usercontract = (await cntx.AskForms
-                                .Include(x => x.StudentNavigation)
-                                .Where(x => x.StudentNavigation.Email == UserMail)
-                                .Include(x => x.ContractNavigation)
-                                //.ThenInclude(x=>x.OrganizationNavigation)
-                                .FirstAsync(x=>x.Id==ID)).ContractNavigation;
-
-                            var NewOrganisation = new Organization() 
-                            {
-                                Name = UserForm["FactoryName"] ?? "",
-                                Adress = UserForm["FactoryLocation"] ?? "",
-                                Rank = UserForm["FactoryRank"] ?? "",
-                                FactoryLeader = UserForm["FactoryLeaderName"] ?? "",
-                                Document = UserForm["OrganizationRule"] ?? "",
-                            };
-                            var orgTaskAdd = cntx.AddAsync(NewOrganisation);
-
-                            Usercontract.OrganizationNavigation = NewOrganisation;
-
-                            Usercontract.Room = UserForm["WorksRooms"];
-
-                            await orgTaskAdd;
-                            await cntx.SaveChangesAsync();
+                            case "AskForm":
+                                askForm.Status = UserForm["Confirm"] == "Confirm" ? askForm.Status + 1 : askForm.Status - 1;
+                                break;
+                            case "Contract":
+                                var contract = await cntx.Contracts.FindAsync(askForm.Contract);
+                                contract.Status = UserForm["Confirm"] == "Confirm" ? contract.Status + 1 : contract.Status - 1;
+                                break;
                         }
-                        
-                        break;
-                    case "AskForm":
+                    cntx.AskForms.Update(askForm);
+                    await cntx.SaveChangesAsync();
+                    return Results.Ok("success");
+                }
 
-                        break;
+                askForm = await cntx.AskForms
+                    .Include(x => x.StudentNavigation)
+                    .FirstAsync(x => x.Id == ID.Value && x.StudentNavigation.Email == UserMail);
+
+
+                    Organization? organisation;
+                    switch (Template)
+                    {
+                        case "Contract":
+                            {
+                                var DoubledContract = await cntx.Contracts
+                                    .FirstOrDefaultAsync(x => x.OrganizationNavigation.Name == UserForm["FactoryName"]
+                                        && x.OrganizationNavigation.Adress == UserForm["FactoryLocation"]);
+#warning Добавить Руководителя практики от организации ^
+                                switch (DoubledContract, askForm)
+                                {
+                                    ///<!--Договор с этим предприятием есть, студент остался в нём-->
+                                    case (Contract, AskForm) ValuePair when ValuePair.askForm.Contract == ValuePair.DoubledContract.Id:
+                                        ValuePair.DoubledContract.Status = ValuePair.DoubledContract.Status++;
+                                        break;
+                                    ///<!--Договор с этим предприятием есть, студент изменил предприятие-->
+                                    case (Contract, AskForm) ValuePair:
+                                        var oldcontract = ValuePair.askForm.Contract;
+                                        ValuePair.askForm.Contract = ValuePair.DoubledContract.Id;
+                                        if (cntx.AskForms.Where(x => x.Contract == oldcontract).Count() == 0)
+                                        {
+                                            var oldContractEntity = await cntx.Contracts.FirstAsync(x => x.Id == oldcontract);
+                                            organisation = await cntx.Organizations.FindAsync(oldContractEntity.Organisation);
+                                            if (organisation != null)
+                                                cntx.Organizations.Remove(organisation);
+                                            cntx.Contracts.Remove(oldContractEntity);
+                                        }
+                                        ValuePair.DoubledContract.Status = ValuePair.DoubledContract.Status++;
+                                        await cntx.SaveChangesAsync();
+                                        break;
+                                    ///<!--Такого договора не существует-->
+                                    case (null, _):
+                                        Organization neworganisation = new Organization()
+                                        {
+                                            Name = UserForm["FactoryName"] ?? "",
+                                            Adress = UserForm["FactoryLocation"] ?? "",
+                                            Rank = UserForm["FactoryRank"] ?? "",
+                                            FactoryLeader = UserForm["FactoryLeaderName"] ?? "",
+                                            Document = UserForm["OrganizationRule"] ?? "",
+                                        };
+                                        cntx.Organizations.Add(neworganisation);
+                                        var icnludeduser = await cntx.Users
+                                            .Where(x => x == User)
+                                            .Include(x => x.Student)
+                                            .ThenInclude(x => x.GroupNavigation)
+                                            .ThenInclude(x => x.DirectionNavigation)
+                                            .ThenInclude(x => x.PracticTymes)
+                                            .FirstAsync();
+                                        Contract newcontract = new Contract()
+                                        {
+                                            OrganizationNavigation = neworganisation,
+                                            Number = cntx.Contracts.Select(x => x.Number).Max() + 1,
+                                            Room = UserForm["WorksRooms"],
+                                            Status = (await cntx.Contracts.FindAsync(askForm.Contract)).Status,
+                                            Equipment = UserForm["Practic Used Tools"].Split('&'),
+                                            PracticTimenNavigation = icnludeduser.Student!.GroupNavigation.DirectionNavigation.PracticTymes.First(x => x.Year == DateTime.Now.Year)
+                                        };
+                                        cntx.Contracts.Add(newcontract);
+                                        askForm.ContractNavigation = newcontract;
+                                        break;
+                                }
+                            }
+
+                            break;
+                        case "AskForm":
+                            askForm.Status++;
+                            var contract = await cntx.Contracts.FindAsync(askForm.Contract);
+                            organisation = await cntx.Organizations.Where(x => x.Name == UserForm["FactoryName"] && x.Adress == UserForm["FactoryAdress"]).FirstOrDefaultAsync();
+                            if (organisation is not null)
+                            {
+                                contract.OrganizationNavigation = organisation;
+                            }
+                            else
+                            {
+                                Organization neworganisation = new Organization()
+                                {
+                                    Name = UserForm["FactoryName"] ?? "",
+                                    Adress = UserForm["FactoryLocation"] ?? "",
+                                    Rank = UserForm["FactoryRank"] ?? "",
+                                    FactoryLeader = UserForm["FactoryLeaderName"] ?? "",
+                                    Document = UserForm["OrganizationRule"] ?? "",
+                                };
+
+                                contract.OrganizationNavigation = neworganisation;
+                            }
+                            
+                            await cntx.SaveChangesAsync();
+                            break;
+                    }
+                    return Results.Ok("success");
+
+                }
+                catch (Exception ex)
+                {
+                    return Results.InternalServerError();
                 }
 
 
@@ -1147,6 +1298,7 @@ namespace GPO_BLAZOR
                 return cntx.Templates.Where(x => x.Name == TemplateName).FirstOrDefault().TemplateBody;
                 
             });
+            
             app.UseStaticFiles();
             app.MapStaticAssets();
             app.MapRazorComponents<App>()

@@ -12,7 +12,7 @@
             switch (temp.ClassType)
             {
                 case "CollectionInformationField":
-                    <SelectedTextField Date="temp" />
+                    <SelectedTextField Date="temp" IDValue="@ID"/>
                     break;
                 case "InputInformationField":
                     <TextField Date="temp" />
@@ -29,8 +29,8 @@
                     <TextField Date="temp" />
                     break;
             }
-            
-    }
+
+        }
     </div>
 
 </body>
@@ -38,6 +38,8 @@
 @code {
     [Parameter]
     public IBlock Date { get; set; }
+    [Parameter]
+    public string? ID { get; set; }
 
     protected override void OnInitialized()
     {

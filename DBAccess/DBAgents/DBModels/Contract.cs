@@ -48,7 +48,7 @@ public partial class Contract
     /// Материально техническое обеспече
     /// </summary>
     [Column("МатериальноТехническоеОбеспече")]
-    public string? Equipment { get; set; }
+    public string[]? Equipment { get; set; }
 
 
     public virtual ICollection<AskForm> AskForms { get; set; } = new List<AskForm>();

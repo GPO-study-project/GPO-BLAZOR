@@ -25,7 +25,12 @@
                 </div >
             </div>
             <div class="content">
-                <PageValuesBlock Date="SelectedPage"/>
+                <RoleController Role="@Class.Date.Roles.Student" >
+                    <PageValuesBlock Date="SelectedPage"/>
+                </RoleController>
+                <RoleController Role="@Class.Date.Roles.FieldCommander" >
+                    <PageValuesBlock Date="SelectedPage" ID=@Number.ToString()/>
+                </RoleController>
                 @switch (Date.State)
                 {
                     case 1:

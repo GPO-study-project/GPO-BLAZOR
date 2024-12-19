@@ -11,7 +11,7 @@
             <InputSelect @bind-Value="@Date.value" id="@Date.Id" class="@Date.ClassType" disabled=@Date.IsDisabled >
                 @if (collection.Values.Count() == 1)
                 {
-                    Date.value = collection.Values.FirstOrDefault();
+                    Date.value = collection.Values[0];
                 }
                 @foreach (string item in collection.Values)
                 {

@@ -3,6 +3,7 @@ namespace GPO_BLAZOR.Client.Class.Date
 {
     public enum Roles
     {
+        None,
         Student,
         CafedralLeader,
         FieldCommander,
@@ -26,10 +27,10 @@ namespace GPO_BLAZOR.Client.Class.Date
                     return Roles.Student;
                 case "CafedralLeader":
                     return Roles.CafedralLeader;
-                case "FieldCommander":
+                case "PracticFieldLeader":
                     return Roles.FieldCommander;
                 default:
-                    return Roles.Student;
+                    return Roles.None;
             }
         }
         public AutorizationStruct()
@@ -52,6 +53,8 @@ namespace GPO_BLAZOR.Client.Class.Date
         {
             try
             {
+                if (role == Roles.None)
+                    return true;
                 return Role.Contains(role);
             }
             catch (Exception ex)
