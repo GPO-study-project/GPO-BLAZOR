@@ -9,7 +9,7 @@
 @code {
     private async Task DownloadPdf()
     {
-        byte[] pdfBytes = PdfGenerator.CreatePdf();
+        byte[] pdfBytes = await PdfGenerator.CreatePdf();
         var fileName = $"{TemplateName}.pdf";
         await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(pdfBytes));
     }

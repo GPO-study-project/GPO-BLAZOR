@@ -480,7 +480,7 @@ namespace GPO_BLAZOR
                     x.Key,
                     x.Value
                         .GetNames()
-                        .Append((Name: "Commentary", getter: ()=>"", setter: (string x) => { }
+                        .Append((Name: "Commentary", getter: async ()=>"", setter: async (string x) => { }
                 ))
                         .Select(y => y.Name)
                         .Distinct()
@@ -638,7 +638,7 @@ namespace GPO_BLAZOR
                     string[] Values = Name.Split(' ');
                     if (Values.Length < 3)
                     { Values = new string[3] { "Иван", "Иванов", "Иванович" }; };
-                    string responce = $"name={Values[0]}&surname={Values[1]}&patronymic={Values[2]}";
+                    string responce = $"name={Values[1]}&surname={Values[0]}&patronymic={Values[2]}";
 #if DEBUG
                     Console.WriteLine(responce);
 #endif
@@ -652,7 +652,7 @@ namespace GPO_BLAZOR
 
                     XDocument xdoc = XDocument.Parse($"<Document>{result3}</Document>");
                     var xelements = xdoc.Element("Document").Element("ul").Elements("li").ToArray();
-                    var resultxml = xelements.Select(x => (x.Value)).ToArray();
+                    var resultxml = xelements.Select(x => (x.Value.Substring(4))).ToArray();
                     return resultxml[(int)wordCase];
                 });
 
@@ -674,9 +674,9 @@ namespace GPO_BLAZOR
                     var role = context.User.Claims.First(x => x.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Value.Split('\n');
                     if (!role.Contains("Student"))
                     {
-                        var t1 = (await cntx.AskForms.FirstOrDefaultAsync(x => x.Id.ToString() == ID));
-                        var t2 = (await cntx.Students.FindAsync(t1.Student));
-                        var t3 = (await cntx.Users.FindAsync(t2.User));
+                        var t1 = await cntx.AskForms.FirstOrDefaultAsync(x => x.Id.ToString() == ID);
+                        var t2 = await cntx.Students.FindAsync(t1.Student);
+                        var t3 = await cntx.Users.FindAsync(t2.User);
                         username = t3.Email;
                     }
 
@@ -944,7 +944,10 @@ namespace GPO_BLAZOR
 
                 if (!role.Contains("Student"))
                 {
-                    UserMail = (await cntx.Users.FindAsync((await cntx.Students.FindAsync((await cntx.AskForms.FirstOrDefaultAsync(x => x.Id.ToString() == ID)).Student)).User)).Email;
+                    var t1 = cntx.AskForms.FirstOrDefaultAsync(x => x.Id.ToString() == ID);
+                    var t2 = cntx.Students.FindAsync((t1.GetAwaiter().GetResult() ?? throw new Exception ("No Find User!")).Student);
+                    var t3 = (await cntx.Users.FindAsync((t2.GetAwaiter().GetResult()).User)).Email;
+                    UserMail = t3;
                 }
 
                 var User = await cntx.Users
@@ -1001,11 +1004,11 @@ namespace GPO_BLAZOR
                             
                             await cntx.AskForms.AddAsync(AskForm);
                             await cntx.SaveChangesAsync();
-                            Result["id"] = (await cntx.AskForms.Where(x => x.StudentNavigation.Email == UserMail).MaxAsync(x => x.Id)).ToString();
+                            Result["id"] = await cntx.AskForms.Where(x => x.StudentNavigation.Email == UserMail).MaxAsync(x => x.Id).ContinueWith(x => x.Result.ToString());
                             ID = Result["id"];
                             break;
                         case "Договор":
-                            Result["id"] = (await cntx.AskForms.Where(x => x.StudentNavigation.Email == UserMail).MaxAsync(x => x.Id)).ToString();
+                            Result["id"] = await cntx.AskForms.Where(x => x.StudentNavigation.Email == UserMail).MaxAsync(x => x.Id).ContinueWith(x => x.Result.ToString());
                             ID = Result["id"];
                             var form = await cntx.AskForms.FirstAsync(x => x.Id == Int32.Parse(ID));
                             contract = await cntx.Contracts.FirstAsync(x=>x.Id==form.Contract);
@@ -1096,9 +1099,28 @@ namespace GPO_BLAZOR
                         Result.Add("Cafedral Practic Leader", $"{User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.LastName ?? ""}" + " "+
                             $" {User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.FirstName ?? ""}" + " "+
                             $" {User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.MiddleName ?? ""}");
-                        Result.Add("WorksRooms", (await cntx.AskForms.FirstAsync(x => x.Id == NumID)).ContractNavigation.Room ?? "");
-                        Result.Add("WorkRoomAddress", (await cntx.AskForms.FirstAsync(x => x.Id == NumID)).ContractNavigation.OrganizationNavigation.Adress ?? "");
-                        Result.Add("Practic Used Tools", ((await cntx.AskForms.FirstAsync(x => x.Id == NumID)).ContractNavigation.Equipment ?? new string[0]).Aggregate(new StringBuilder(),(x,y)=>x.Append('&').Append(y)).ToString() ?? "");
+                        var t1 = cntx.AskForms
+                            .FirstAsync(x => x.Id == NumID)
+                            .ContinueWith(x => x.Result.ContractNavigation.Room ?? "")
+                            .ContinueWith(x=>new KeyValuePair<string, string> ("WorksRooms", x.Result));
+                        var t2 = cntx.AskForms
+                            .FirstAsync(x => x.Id == NumID)
+                            .ContinueWith(x=>x.Result.ContractNavigation.OrganizationNavigation.Adress ?? "")
+                            .ContinueWith(x => new KeyValuePair<string, string>("WorkRoomAddress", x.Result));
+                        var t3 = cntx.AskForms
+                            .FirstAsync(x => x.Id == NumID)
+                            .ContinueWith(x => x.Result.ContractNavigation.Equipment ?? Array.Empty<string>())
+                            .ContinueWith(x=>x.Result.Aggregate(new StringBuilder(), (x, y) => x
+                                .Append('&')
+                                .Append(y))
+                            .ToString() ?? "")
+                            .ContinueWith(x => new KeyValuePair<string, string>("Practic Used Tools", x.Result));
+
+                        var results = await Task.WhenAll(t1, t2, t3);
+                        foreach (var pair in results)
+                        {
+                            Result.Add(pair.Key, pair.Value);
+                        }
                         break;
                     default:
                         return Results.NotFound();

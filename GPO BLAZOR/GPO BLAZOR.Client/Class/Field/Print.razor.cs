@@ -14,11 +14,11 @@ namespace GPO_BLAZOR.Client.Class.Field
     {
         public delegate string Getter(string Name);
         public delegate void Setter(string Name, string Value);
-        private Func<string>? _getter;
-        private Action<string>? _setter;
+        private Func<Task<string>>? _getter;
+        private Func<string, Task>? _setter;
 
 
-        public event Func<string> AddGet
+        public event Func<Task<string>> AddGet
         {
             add
             {
@@ -31,7 +31,7 @@ namespace GPO_BLAZOR.Client.Class.Field
             }
         }
 
-        public event Action<string> AddSet
+        public event Func<string,Task> AddSet
         {
             add
             {
@@ -44,17 +44,17 @@ namespace GPO_BLAZOR.Client.Class.Field
             }
         }
 
-        public string Get()
+        public async Task<string> Get()
         {
             if (_getter is not null)
-                return _getter();
+                return await _getter();
             return "";
         }
 
-        public void Set(string Value)
+        public async Task Set(string Value)
         {
             if (_setter != null)
-                _setter(Value);
+                await _setter(Value);
         }
 
     }
@@ -109,12 +109,12 @@ namespace GPO_BLAZOR.Client.Class.Field
 #if DEBUG
                         Console.WriteLine($"Keys Pair :{temp.Key} : {temp.Value}");
 #endif
-                        Names[temp.Key].Set(temp.Value);
+                        await Names[temp.Key].Set(temp.Value);
                     }
                 }
                 try
                 {
-                    pdfDocumentRenderer.Document = doc.Render();
+                    pdfDocumentRenderer.Document = await doc.Render();
                     //pdfDocumentRenderer.Document = pdfrend;
                 }
                 catch (Exception ex)
@@ -143,7 +143,7 @@ namespace GPO_BLAZOR.Client.Class.Field
                     pdfDocumentRenderer.PdfDocument.Save(memoryStream);
                     await JSRuntime.InvokeVoidAsync("saveAsFile", "fileName.pdf", Convert.ToBase64String(memoryStream.ToArray()));
                     RtfDocumentRenderer h = new RtfDocumentRenderer();
-                    h.Render(result.Value.Render(), memoryStream, "/");
+                    h.Render(await result.Value.Render(), memoryStream, "/");
                     await JSRuntime.InvokeVoidAsync("saveAsFile", "fileName.rtf", Convert.ToBase64String(memoryStream.ToArray()));
 
                 }

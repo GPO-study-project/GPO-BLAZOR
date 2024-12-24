@@ -17,7 +17,7 @@ using System.Xml.Serialization;
 namespace GPO_BLAZOR.Client.Class.Field;
 public class PdfGenerator
 {
-    public static byte[] CreatePdf()
+    public static async Task<byte[]> CreatePdf()
     {
         using (var memoryStream = new MemoryStream())
         {
@@ -42,7 +42,7 @@ public class PdfGenerator
             gfx.DrawString("Hello, PDFsharp!", font, XBrushes.Black, new XRect(0, 0, page.Width, page.Height), XStringFormats.Center);
 
             document.Save(memoryStream);
-            var doc = PdfFilePrinting.MakeTemplate.MakeContractTemplate.Make().Render();
+            var doc = await PdfFilePrinting.MakeTemplate.MakeContractTemplate.Make().Render();
             PdfDocumentRenderer renderer = new PdfDocumentRenderer();
             Section section = doc.AddSection();
             section.AddParagraph("2345");

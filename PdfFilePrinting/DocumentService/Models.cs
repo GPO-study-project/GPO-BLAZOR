@@ -37,7 +37,7 @@ namespace PdfFilePrinting.DocumentService
         [XmlElementAttribute(Type = typeof(Table))]
         public BaseParagraph[] paragrapfs { get; set; }
 
-        public void Render(in RenderingDocument document)
+        public async Task Render(RenderingDocument document)
         {
             var section = document.AddSection();
             document.AddStyle("OS TUSUR", "normal");
@@ -45,11 +45,11 @@ namespace PdfFilePrinting.DocumentService
             section.PageSetup.PageFormat = PageFormat.A4;
             foreach (BaseParagraph temp in paragrapfs)
             {
-                temp.Render(section);
+                await temp.Render(section);
             }
         }
 
-        public IEnumerable<(string Name, Func<string> getter, Action<string> setter)> GetNames()
+        public IEnumerable<(string Name, Func<Task<string>> getter, Func<string, Task> setter)> GetNames()
         {
             var temp = paragrapfs.SelectMany(x => x.GetName());
 
@@ -150,11 +150,11 @@ namespace PdfFilePrinting.DocumentService
     [JsonDerivedType(typeof(Table), "Table")]
     public abstract class BaseParagraph : FormatedElement
     {
-        public abstract void Render(in RenderingSection element);
-        public abstract void Render(in RenderingTable.Cell element);
-        public abstract void Render(in RenderingTable.Cell element, Unit with);
+        public abstract Task Render(RenderingSection element);
+        public abstract Task Render(RenderingTable.Cell element);
+        public abstract Task Render(RenderingTable.Cell element, Unit with);
 
-        public abstract IEnumerable<(string Name, Func<string> getter, Action<string> setter)> GetName();
+        public abstract IEnumerable<(string Name, Func<Task<string>> getter, Func<string, Task> setter)> GetName();
     }
 
 
@@ -182,7 +182,7 @@ namespace PdfFilePrinting.DocumentService
         public bool Tab { get => tab; set => tab = value; }
         private bool tab = false;
 
-        public override void Render(in RenderingSection section)
+        public override async Task Render(RenderingSection section)
         {
             var paragraph = section.AddParagraph();
             SetParametress(paragraph.Format);
@@ -191,11 +191,11 @@ namespace PdfFilePrinting.DocumentService
             if (text is not null)
                 foreach (BaseElement temp in text)
                 {
-                    temp.Render(paragraph);
+                    await temp.Render(paragraph);
                 }
         }
 
-        public override void Render(in RenderingTable.Cell section)
+        public override async Task Render(RenderingTable.Cell section)
         {
             var paragraph = section.AddParagraph();
 
@@ -205,10 +205,10 @@ namespace PdfFilePrinting.DocumentService
             if (text is not null)
                 foreach (BaseElement temp in text)
                 {
-                    temp.Render(paragraph);
+                    await temp.Render(paragraph);
                 }
         }
-        public override void Render(in RenderingTable.Cell section, Unit With)
+        public override async Task Render(RenderingTable.Cell section, Unit With)
         {
             var paragraph = section.AddParagraph();
             SetParametress(paragraph.Format);
@@ -220,11 +220,11 @@ namespace PdfFilePrinting.DocumentService
             if (text is not null)
                 foreach (BaseElement temp in text)
                 {
-                    temp.Render(paragraph);
+                    await temp.Render(paragraph);
                 }
         }
 
-        public override IEnumerable<(string Name, Func<string> getter, Action<string> setter)> GetName()
+        public override IEnumerable<(string Name, Func<Task<string>> getter, Func<string, Task> setter)> GetName()
         {
             if (text is not null)
             {
@@ -233,7 +233,7 @@ namespace PdfFilePrinting.DocumentService
             }
             else
             {
-                return Enumerable.Empty < (string Name, Func<string> getter, Action<string> setter) > ();
+                return Enumerable.Empty < (string Name, Func<Task<string>> getter, Func<string, Task> setter) > ();
             }
         }
     }
@@ -245,7 +245,7 @@ namespace PdfFilePrinting.DocumentService
         [XmlElementAttribute(Type = typeof(MyltiplyInjectElement))]
         [XmlElementAttribute(Type = typeof(InjectElement))]
         public override BaseElement[] text { get; set; }
-        public override void Render(in RenderingTable.Cell section)
+        public override async Task Render(RenderingTable.Cell section)
         {
             var count = text.Select(x => x as MyltiplyInjectElement).Where(x=> x !=null).Select(x=> x.Map = x.Map.Reverse().ToArray()).Max(x=>x.Count());
             //section.MergeDown = count;
@@ -278,17 +278,17 @@ namespace PdfFilePrinting.DocumentService
                         changed.MergeDown = temp.MergeDown > 0 ? temp.MergeDown - 1 : 0;
                     }
                     temp.MergeDown = 0;
-                    base.Render(temp);
+                    await base.Render(temp);
                 }
             }
         }
 
-        public override void Render(in RenderingSection section)
+        public override async Task Render(RenderingSection section)
         {
             var count = text.Count(x => x is MyltiplyInjectElement);
             for (int i = 0; i < count; i++)
             {
-                base.Render(section);
+                await base.Render(section);
             }
         }
     }
@@ -309,7 +309,7 @@ namespace PdfFilePrinting.DocumentService
         [XmlArray]
         public Column[] Columns { get; set; }
 
-        public override IEnumerable<(string Name, Func<string> getter, Action<string> setter)> GetName()
+        public override IEnumerable<(string Name, Func<Task<string>> getter, Func<string, Task> setter)> GetName()
         {
             var tempRows = (Rows ?? new Row[] { }).SelectMany(x => x.GetName());
             var tempColumns = Columns.SelectMany(x => x.GetName());
@@ -320,7 +320,7 @@ namespace PdfFilePrinting.DocumentService
             return tempsumm;
         }
 
-        public override void Render(in RenderingSection section)
+        public override async Task Render(RenderingSection section)
         {
             var Table = section.AddTable();
             Table.KeepTogether = KeepTogether;
@@ -330,7 +330,7 @@ namespace PdfFilePrinting.DocumentService
             Table = SetBorders(Table);
             Unit width = (Table.Section.PageSetup.PageWidth - Table.Section.PageSetup.LeftMargin - Table.Section.PageSetup.RightMargin) / Columns.Sum(x=>x.Priorety);
             foreach (Column column in Columns)
-                column.Render(Table, width*column.Priorety);
+                await column.Render(Table, width*column.Priorety);
             if (Head is not null)
             {
                 Head.Render(Table, true);
@@ -339,16 +339,16 @@ namespace PdfFilePrinting.DocumentService
             foreach (Row row in Rows)
                 row.Render(Table);
         }
-        public override void Render(in RenderingTable.Cell section)
+        public override async Task Render(RenderingTable.Cell section)
         {
-            TableRender (section.AddTextFrame().AddTable(), section.Column.Width);
+            await TableRender (section.AddTextFrame().AddTable(), section.Column.Width);
         }
 
-        public override void Render(in RenderingTable.Cell section, Unit with)
+        public override async Task Render(RenderingTable.Cell section, Unit with)
         {
 
             var Table = section.AddTextFrame().AddTable();
-            TableRender(Table, with);
+            await TableRender(Table, with);
 
         }
 
@@ -388,7 +388,7 @@ namespace PdfFilePrinting.DocumentService
             return Table;
         }
 
-        public void TableRender (RenderingTable.Table Table, Unit with = default(Unit))
+        public async Task TableRender (RenderingTable.Table Table, Unit with = default(Unit))
         {
             Table.KeepTogether = KeepTogether;
 
@@ -402,7 +402,7 @@ namespace PdfFilePrinting.DocumentService
             else
                 width = (Table.Section.PageSetup.PageWidth - Table.Section.PageSetup.LeftMargin - Table.Section.PageSetup.RightMargin) / Columns.Sum(x => x.Priorety);
             foreach (Column column in Columns)
-                column.Render(Table, width * column.Priorety);
+                await column.Render(Table, width * column.Priorety);
             if (Head is not null)
             {
                 Head.Render(Table, true);
@@ -427,7 +427,7 @@ namespace PdfFilePrinting.DocumentService
         [DefaultValue(0)]
         [XmlAttribute]
         public int KeepWith { get; set; } = 0;
-        public virtual void Render(in RenderingTable.Table section, bool isHead = false)
+        public virtual async Task Render(RenderingTable.Table section, bool isHead = false)
         {
             var row = section.AddRow();
             row.KeepWith = KeepWith;
@@ -436,11 +436,11 @@ namespace PdfFilePrinting.DocumentService
             if (Cells is not null)
                 for (int i = 0; Cells.Length > i; i++)
                 {
-                    Cells[i].Render(row.Cells[i]);
+                    await Cells[i].Render(row.Cells[i]);
                 }
         }
 
-        public IEnumerable<(string Name, Func<string> getter, Action<string> setter)> GetName()
+        public IEnumerable<(string Name, Func<Task<string>> getter, Func<string, Task> setter)> GetName()
         {
             var temp = Cells.SelectMany(x => x.GetName());
             return temp;
@@ -461,7 +461,7 @@ namespace PdfFilePrinting.DocumentService
         public int Priorety { get; set; } = 1;
         public Cell[] Cells { get; set; }
 
-        public void Render(in RenderingTable.Table section, Unit width, bool isHead = false)
+        public async Task Render(RenderingTable.Table section, Unit width, bool isHead = false)
         {
             RenderingTable.Column column;
             var dob = width.Value;
@@ -474,18 +474,18 @@ namespace PdfFilePrinting.DocumentService
             if (Cells is not null)
             {
                 for (int i = 0; Cells.Length > i; i++)
-                    Cells[i].Render(column[i]);
+                    await Cells[i].Render(column[i]);
             }
             return;
         }
 
-        public IEnumerable<(string Name, Func<string> getter, Action<string> setter)> GetName()
+        public IEnumerable<(string Name, Func<Task<string>> getter, Func<string, Task> setter)> GetName()
         {
-            IEnumerable<(string Name, Func<string> getter, Action<string> setter)> temp;
+            IEnumerable<(string Name, Func<Task<string>> getter, Func<string, Task> setter)> temp;
             if (Cells is not null)
                 temp = Cells.SelectMany(x => x.GetName());
             else
-                temp = Enumerable.Empty<(string Name, Func<string> getter, Action<string> setter)>();
+                temp = Enumerable.Empty<(string Name, Func<Task<string>> getter, Func<string, Task> setter)>();
             return temp;
         }
     }
@@ -503,7 +503,7 @@ namespace PdfFilePrinting.DocumentService
         [XmlArrayItem("Paragrapf", typeof(Paragrapf))]
         [XmlArrayItem("MyltiplyParagraph", typeof(MyltiplyParagraph))]
         public BaseParagraph[] Text { get; set; }
-        public void Render(in RenderingTable.Cell cell)
+        public async Task Render(RenderingTable.Cell cell)
         {
             if (cell is not null)
             {
@@ -511,23 +511,23 @@ namespace PdfFilePrinting.DocumentService
                 SetParametress(cell.Format);
                 if (Text is not null)
                 foreach (var text in Text)
-                    text.Render(cell);
+                    await text.Render(cell);
             }
             return;
         }
 
-        public void Render(in RenderingTable.Cell cell, Unit with)
+        public async Task Render(RenderingTable.Cell cell, Unit with)
         {
             if (cell is not null)
             {
                 SetParametress(cell.Format);
                 foreach (var text in Text)
-                    text.Render(cell, with);
+                    await text.Render(cell, with);
             }
             return;
         }
 
-        public IEnumerable<(string Name, Func<string> getter, Action<string> setter)> GetName()
+        public IEnumerable<(string Name,  Func<Task<string>> getter, Func<string, Task> setter)> GetName()
         {
             var temp = Text.SelectMany(x => x.GetName());
             return temp;
@@ -558,16 +558,28 @@ namespace PdfFilePrinting.DocumentService
         [XmlAttribute]
         [DefaultValue(false)]
         public bool SubScript { get; set; } = false;
-        public void Render(in Paragraph paragraph)
+        public async Task Render(Paragraph paragraph)
         {
-            var formatedText = paragraph.AddFormattedText($"{TextValue}");
-            if (SpecialLine)
+            try
             {
-                formatedText.Italic = Italic;
-                formatedText.Underline = Underline;
-                formatedText.Bold = Bold;
-                formatedText.Subscript = SubScript;
-                formatedText.Superscript = SuperScript;
+                string Text;
+                if (WordCase == WordCase.Nominative)
+                    Text = _textValue;
+                else
+                    Text = await ChangeForm(WordCase, _textValue);
+                var formatedText = paragraph.AddFormattedText($"{Text}");
+                if (SpecialLine)
+                {
+                    formatedText.Italic = Italic;
+                    formatedText.Underline = Underline;
+                    formatedText.Bold = Bold;
+                    formatedText.Subscript = SubScript;
+                    formatedText.Superscript = SuperScript;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Base Element Render -> {ex.Message}");
             }
         }
 
@@ -593,8 +605,9 @@ namespace PdfFilePrinting.DocumentService
         [XmlText]
         public virtual string TextValue
         {
-            get
+            get 
             {
+                return _textValue;
                 if (WordCase == WordCase.Nominative)
                     return _textValue;
                 var task = ChangeForm(WordCase, _textValue);
@@ -611,7 +624,7 @@ namespace PdfFilePrinting.DocumentService
             }
         }
 
-        public abstract (string  Name, Func<string> getter, Action<string> setter)? GetName();
+        public abstract (string  Name, Func<Task<string>> getter, Func<string, Task> setter)? GetName();
     }
 
    public enum WordCase
@@ -637,10 +650,10 @@ namespace PdfFilePrinting.DocumentService
         public string Name { get; set; }
         
 
-        public override (string, Func<string>, Action<string>)? GetName()
+        public override (string, Func<Task<string>>, Func<string, Task>)? GetName()
         {
-            var setter = () => (TextValue);
-            var getter = (string val) => { TextValue = val; };
+            var setter = async () => (TextValue);
+            var getter = async (string val) => { TextValue = val; };
             return (Name, setter, getter);
         }
 
@@ -667,19 +680,27 @@ namespace PdfFilePrinting.DocumentService
         [XmlIgnore]
         public override string TextValue { get 
             {
-                if (map2 is null)
-                    return null;
-                string result;
-                if (map.TryPop(out result))
+                try
                 {
-                    if (map.Count == 0)
-                        map = new Stack<string>(map2.Reverse().ToArray());
-                    return result;
+                    if (map2 is null)
+                        return null;
+                    string result;
+                    if (map.TryPop(out result))
+                    {
+                        if (map.Count == 0)
+                            map = new Stack<string>(map2.Reverse().ToArray());
+                        return result;
+                    }
+                    else
+                    {
+                        map = new Stack<string>(map2.ToArray());
+                        return map.Pop();
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    map = new Stack<string>(map2.ToArray());
-                    return map.Pop();
+                    Console.WriteLine($"Multiply Inject -> {ex.Message}");
+                    return null;
                 }
             } 
                 set 
@@ -703,7 +724,7 @@ namespace PdfFilePrinting.DocumentService
 
         }
 
-        public override (string, Func<string>, Action<string>)? GetName()
+        public override (string, Func<Task<string>>, Func<string, Task>)? GetName()
         {
             return null;
         }
