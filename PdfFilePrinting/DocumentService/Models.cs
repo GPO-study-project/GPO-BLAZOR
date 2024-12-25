@@ -20,6 +20,7 @@ using System.Security.Cryptography;
 using System.Net.Http.Json;
 using System.Net;
 using System;
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace PdfFilePrinting.DocumentService
 {
@@ -585,16 +586,63 @@ namespace PdfFilePrinting.DocumentService
 
         protected static async Task<string> ChangeForm(WordCase wordCase, string Name)
         {
-            using (HttpClient httpClient = new HttpClient())
+            try
             {
+                if (Name is null)
+                {
+                    return Name;
+                }
+                HttpClient htpc = new HttpClient();
+                htpc.BaseAddress = new Uri("https://surnameonline.ru");
+                htpc.DefaultRequestHeaders.Host = "surnameonline.ru";
+                htpc.DefaultRequestHeaders.Add("Origin", new[] { "https://surnameonline.ru" });
+                htpc.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+                htpc.DefaultRequestHeaders.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("UTF8"));
+                //htpc.DefaultRequestHeaders.Add("Content-Type", new[] { , "charset=UTF-8" });
+                htpc.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
+                htpc.DefaultRequestHeaders.Add("mode", "no-cors");
+                htpc.DefaultRequestHeaders.Add("Access-Control-Allow-Origin", "*");
 
-                httpClient.BaseAddress = new Uri($"https://localhost:3001/CaseWaord?wordCase={wordCase}&Name={Name}");
-                //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress);
-  
-                var tempresponce = await httpClient.SendAsync(requestMessage);
+                htpc.DefaultRequestHeaders.Referrer = new Uri("https://surnameonline.ru");
+                //htpc.DefaultRequestHeaders.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+                htpc.BaseAddress = new Uri("https://surnameonline.ru/");
+                string[] Values = Name.Split(' ');
+                if (Values.Length < 3)
+                { Values = new string[3] { "Иван", "Иванов", "Иванович" }; };
+                var responce = new HttpRequestMessage(HttpMethod.Post, new Uri("https://surnameonline.ru/inflect.php"));
+                responce.SetBrowserRequestMode(BrowserRequestMode.NoCors);
+                responce.Content = new StringContent($"name={Values[1]}&surname={Values[0]}&patronymic={Values[2]}", Encoding.UTF8,
+                                                        "application/x-www-form-urlencoded");
+                
+#if DEBUG
+                Console.WriteLine(responce);
+#endif
+                var result = await htpc.SendAsync(responce);
 
-                return (await tempresponce.Content.ReadFromJsonAsync<string>());
+
+                var result3 = await result.Content.ReadAsStringAsync();
+
+
+                XDocument xdoc = XDocument.Parse($"<Document>{result3}</Document>");
+                var xelements = xdoc.Element("Document")!.Element("ul")!.Elements("li").ToArray();
+                var resultxml = xelements.Select(x => (x.Value.Substring(4))).ToArray();
+                var resultwords = resultxml[(int)wordCase].Trim();
+                return (resultwords);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Cors ex -> {ex.Message}");
+                using (HttpClient httpClient = new HttpClient())
+                {
+
+                    httpClient.BaseAddress = new Uri($"https://localhost:3001/CaseWaord?wordCase={wordCase}&Name={Name}");
+                    //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
+                    using var requestMessage = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress);
+
+                    var tempresponce = await httpClient.SendAsync(requestMessage);
+
+                    return (await tempresponce.Content.ReadFromJsonAsync<string>());
+                }
             }
 
         }
