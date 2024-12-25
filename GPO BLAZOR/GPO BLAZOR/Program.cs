@@ -45,6 +45,7 @@ using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using PdfFilePrinting.DocumentService;
 using static Azure.Core.HttpHeader;
+using System.Net.WebSockets;
 
 
 
@@ -619,7 +620,7 @@ namespace GPO_BLAZOR
                 {
                     if (Name is null)
                     {
-                        return Name;
+                        return Results.NotFound(Name);
                     }
                     HttpClient htpc = new HttpClient();
                     htpc.BaseAddress = new Uri("https://surnameonline.ru");
@@ -651,9 +652,10 @@ namespace GPO_BLAZOR
 
 
                     XDocument xdoc = XDocument.Parse($"<Document>{result3}</Document>");
-                    var xelements = xdoc.Element("Document").Element("ul").Elements("li").ToArray();
+                    var xelements = xdoc.Element("Document")!.Element("ul")!.Elements("li").ToArray();
                     var resultxml = xelements.Select(x => (x.Value.Substring(4))).ToArray();
-                    return resultxml[(int)wordCase];
+                    var resultwords = resultxml[(int)wordCase].Trim();
+                    return Results.Json(resultwords);
                 });
 
             ///<summary>
@@ -1099,27 +1101,24 @@ namespace GPO_BLAZOR
                         Result.Add("Cafedral Practic Leader", $"{User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.LastName ?? ""}" + " "+
                             $" {User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.FirstName ?? ""}" + " "+
                             $" {User.Student.GroupNavigation.DirectionNavigation.LeaderNavigation.MiddleName ?? ""}");
-                        var t1 = cntx.AskForms
-                            .FirstAsync(x => x.Id == NumID)
+                        var t0 = cntx.AskForms
+                            .FirstAsync(x => x.Id == NumID);
+                        var t1 = t0
                             .ContinueWith(x => x.Result.ContractNavigation.Room ?? "")
                             .ContinueWith(x=>new KeyValuePair<string, string> ("WorksRooms", x.Result));
-                        var t2 = cntx.AskForms
-                            .FirstAsync(x => x.Id == NumID)
+                        var t2 =  t0
                             .ContinueWith(x=>x.Result.ContractNavigation.OrganizationNavigation.Adress ?? "")
                             .ContinueWith(x => new KeyValuePair<string, string>("WorkRoomAddress", x.Result));
-                        var t3 = cntx.AskForms
-                            .FirstAsync(x => x.Id == NumID)
+                        var t3 = t0
                             .ContinueWith(x => x.Result.ContractNavigation.Equipment ?? Array.Empty<string>())
                             .ContinueWith(x=>x.Result.Aggregate(new StringBuilder(), (x, y) => x
                                 .Append('&')
                                 .Append(y))
                             .ToString() ?? "")
                             .ContinueWith(x => new KeyValuePair<string, string>("Practic Used Tools", x.Result));
-
-                        var results = await Task.WhenAll(t1, t2, t3);
-                        foreach (var pair in results)
+                        foreach (var pair in await Task.WhenAll(t1, t2, t3))
                         {
-                            Result.Add(pair.Key, pair.Value);
+                            Result.Add (pair.Key, pair.Value);
                         }
                         break;
                     default:
