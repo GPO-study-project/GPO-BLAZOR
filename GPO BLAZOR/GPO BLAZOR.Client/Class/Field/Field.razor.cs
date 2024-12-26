@@ -5,8 +5,12 @@ namespace GPO_BLAZOR.Client.Class.Field
 {
     public partial class Field
     {
+
         [Parameter]
         public IField Date { get; set; }
+
+        [Inject]
+        public HttpClient HttpClient { get; init; }
 
         protected override Task OnAfterRenderAsync(bool firstRender)
         {

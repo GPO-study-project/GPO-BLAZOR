@@ -17,6 +17,7 @@ namespace GPO_BLAZOR.Client
             builder.Services.AddScoped<CookieStorageAccessor>();
             builder.Services.AddScoped<LocalStorageAccessor>();
             builder.Services.AddScoped<PdfDocumentRenderer>();
+            builder.Services.AddSingleton<HttpClient>(new HttpClient() { BaseAddress = new Uri (builder.HostEnvironment.BaseAddress) });
 
             var app = builder.Build();
 

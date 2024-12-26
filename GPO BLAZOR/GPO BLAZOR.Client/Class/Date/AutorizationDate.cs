@@ -20,11 +20,12 @@ namespace GPO_BLAZOR.Client.Class.Date
         /// </summary>
         /// <param name="reader"> Делегат чтения в хранилище </param>
         /// <param name="writer"> Делегат записи в хранилище </param>
-        public AuthorizationDate(Reader reader, Writer writer) 
+        public AuthorizationDate(Reader reader, Writer writer, HttpClient httpClient) 
             :this()
         {
             _reader = reader;
             _writer = writer;
+            _httpClient = httpClient;
             
         }
 
@@ -122,7 +123,7 @@ namespace GPO_BLAZOR.Client.Class.Date
         /// Поле для хранения заполненного пароля
         /// </summary>
         public string Password { get; set; }
-
+        protected HttpClient _httpClient { get; init; }
         
         /// <summary>
         /// Поле хранящее делегат чтения
@@ -173,46 +174,45 @@ namespace GPO_BLAZOR.Client.Class.Date
         {
             try
             {
-                HttpClient httpClient = new HttpClient();
-                httpClient.BaseAddress = new Uri($"https://{IPaddress.IPAddress}/newJWT");
 #if DEBUG
                 Console.WriteLine("Start jwt Synchronistaion");
 #endif
                 
-                    using var requestMessage = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress);
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}/newJWT");
 #if DEBUG
-                    Console.WriteLine("InWhile");
+                Console.WriteLine("InWhile");
 #endif
-                    //await Task.Delay(new TimeSpan(0, 0, 20));
+                //await Task.Delay(new TimeSpan(0, 0, 20));
 #if DEBUG
-                    Console.WriteLine("Start jwt synfronisationcpocedure");
+                Console.WriteLine("Start jwt synfronisationcpocedure");
 #endif
-                    var jwt = await _reader("Autorization");
-                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+                var jwt = await _reader("Autorization");
+                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
 #if DEBUG
-                    Console.WriteLine("Send jwt sync requestion.....");
+                Console.WriteLine("Send jwt sync requestion.....");
 #endif 
-                    HttpResponseMessage tempresponce;
-                    try
-                    {
-                        tempresponce = await httpClient.SendAsync(requestMessage);
-                    }
-                    catch
-                    {
-                        //await Task.Delay(100);
-                        tempresponce = await httpClient.SendAsync(requestMessage);
-                    }
+                Task<HttpResponseMessage> tempresponce;
+                try
+                {
+                    tempresponce = _httpClient.SendAsync(requestMessage);
+                }
+                catch
+                {
+                    //await Task.Delay(100);
+                    tempresponce = _httpClient.SendAsync(requestMessage);
+                }
 #if DEBUG
-                    Console.WriteLine("SendOldJWT");
+                Console.WriteLine("SendOldJWT");
 #endif
-                    if (tempresponce.IsSuccessStatusCode)
+                await tempresponce.ContinueWith(async x =>
+                {
+                    if (x.Result.IsSuccessStatusCode)
                     {
-                        var result = await tempresponce.Content.ReadFromJsonAsync<Date>();
+                        var result = await x.Result.Content.ReadFromJsonAsync<Date>();
                         string newjwt = result.jwt;
                         await _writer("Autorization", newjwt);
                         if (roles == null)
                             roles = result.role;
-                        
 #if DEBUG
                         Console.WriteLine("GetNewJWT: " + newjwt);
 #endif
@@ -222,8 +222,9 @@ namespace GPO_BLAZOR.Client.Class.Date
                         await _writer("Autorization", "");
                         IsCookies = false;
                         ErrorInAutorization();
-                        throw (new Exception("Invalid Status Code: "+tempresponce.StatusCode));
+                        throw (new Exception("Invalid Status Code: " + x.Result.StatusCode));
                     }
+                }).Unwrap();
 
                 
             }
@@ -263,76 +264,94 @@ namespace GPO_BLAZOR.Client.Class.Date
                                 Password = (Password == "" ? "DefaultPassword" : Password) 
                                 };
 
-
-            ///Формирование строки запроса
-            using HttpClient httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri($"https://{IPaddress.IPAddress}/autorization");
             JsonContent content = JsonContent.Create(sentDate);
 
 
             try
             {
                 ////Отправка запроса
-                using HttpResponseMessage response = await httpClient.PostAsync(httpClient.BaseAddress, content);
+                using Task<HttpResponseMessage> response = _httpClient.PostAsync($"{_httpClient.BaseAddress}/autorization", content);
 #if DEBUG
                 Console.WriteLine($"Запрос на авторизацию {content.Value} + -> "+sentDate.login + "->" + Name);
 #endif
-                ///Проверка ответа
-                try
+                await response.ContinueWith(response =>
                 {
-                    
-                    if (response.IsSuccessStatusCode)
+                    Task t2responce = null;
+                    ///Проверка ответа
+                    try
                     {
-                        Date newPerson = await response.Content.ReadFromJsonAsync<Date>();
-
-                        autorizer.Role = newPerson.role.Select(AutorizationStruct.RoleSelector)
-                            .ToArray();
-                        
-
-                        if (newPerson != null) { 
-
-
-                            await _writer("token", newPerson.token);
-                            await _writer("Autorization", newPerson.jwt);
-                            TimeSkipAndRewrite(timer);
+                        if (response.Result.IsSuccessStatusCode)
+                            t2responce = response.ContinueWith(responseTrue =>
+                                responseTrue.Result.Content.ReadFromJsonAsync<Date>())
+                            .Unwrap()
+                            .ContinueWith(newPerson =>
+                            {
+                                autorizer.Role = newPerson.Result.role.Select(AutorizationStruct.RoleSelector)
+                                    .ToArray();
+                                return newPerson.Result;
+                            })
+                            .ContinueWith(newPersonDate =>
+                                {
+                                    if (newPersonDate.Result != null)
+                                    {
+                                        var tastk = Task.WhenAll(
+                                            _writer("token", newPersonDate.Result.token),
+                                            _writer("Autorization", newPersonDate.Result.jwt)
+                                            ).ContinueWith(x =>
+                                            {
+                                                TimeSkipAndRewrite(timer);
 #if DEBUG
-                            Console.WriteLine("Токен записан");
+                                                Console.WriteLine("Токен записан");
 #endif
-                        }
+                                            });
+                                        return tastk;
+                                    }
+                                    return Task.CompletedTask;
+                                }).Unwrap();
+                        else
+                            t2responce = response.ContinueWith(responseFalse =>
+                            {
+                                try
+                                {
+                                    //Тут ошибка выполнения
+                                    return responseFalse.Result.Content.ReadFromJsonAsync<ErrorMessage>()
+                                        .ContinueWith(error =>
+                                        {
+                                            if (error.Result != null)
+                                                RequestMessage = error.Result.messege;
+                                        }
+                                        
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    return new Task(() =>
+                                    {
+#if DEBUG
+                                        Console.WriteLine("Aurotization error :" + ex.Message);
+#endif
+                                        RequestMessage = "Response have not body!";
+                                    });
+                                }
+                            }).Unwrap();
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        try
-                        {
-                            //Тут ошибка выполнения
-                            var error = await response.Content.ReadFromJsonAsync<ErrorMessage>();
-
-                            if (error != null) RequestMessage = error.messege;
-                        }
-                        catch (Exception ex)
-                        {
-#if DEBUG
-                            Console.WriteLine("Aurotization error :" + ex.Message);
-#endif
-                            RequestMessage = "Response have not body!";
-                        }
+                        Console.WriteLine($"Response Autorization Error -> {ex.Message}");
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Response Autorization Error -> {ex.Message}");
-                }
 #if DEBUG
-                finally
-                {
                     
-                    string responseText = await response
-                        .Content.ReadAsStringAsync();
+                    var t3responce = t2responce.ContinueWith(async responseFinnaly =>
+                    {
+                        string responseText = await response
+                            .Result.Content.ReadAsStringAsync();
 
-                    if (responseText != null && responseText != "")
-                    Console.WriteLine("Финальный блок авторизации: " + responseText);
-
-                }
+                        if (responseText != null && responseText != "")
+                            Console.WriteLine("Финальный блок авторизации: " + responseText);
+                    }).Unwrap();
+                    return t3responce;
+                    
+                });
 #endif
             }
             catch (Exception ex)

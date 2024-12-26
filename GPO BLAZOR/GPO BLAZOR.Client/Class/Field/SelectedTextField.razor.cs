@@ -25,7 +25,7 @@ namespace GPO_BLAZOR.Client.Class.Field
                 if (collection is null)
                 {
                     Console.WriteLine("CollectionIsNull");
-                    collection = await CollectionValues.Create(Date.Id, JSRuntime, IDValue);
+                    collection = await CollectionValues.Create(Date.Id, JSRuntime, IDValue, HttpClient);
                 }
             }
             finally
@@ -41,7 +41,7 @@ namespace GPO_BLAZOR.Client.Class.Field
                 if (collection is null)
                 {
                     Console.WriteLine("CollectionIsNull");
-                    collection = await CollectionValues.Create(Date.Id, JSRuntime, IDValue);
+                    collection = await CollectionValues.Create(Date.Id, JSRuntime, IDValue, HttpClient);
                 }
                 if (collection.Values.Count()==1)
                 {

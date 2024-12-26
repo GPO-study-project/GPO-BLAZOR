@@ -23,53 +23,43 @@ namespace GPO_BLAZOR.Client.Class.Date
             remove => _errorAutorization -= value;
         }
 
-        public async static Task<T> AutorizationedGetRequest<T> (Uri uri, IJSRuntime jsr)
+        public async static Task<T> AutorizationedGetRequest<T> (string path, HttpClient httpClient, IJSRuntime jsr)
         {
-            using (HttpClient httpClient = new HttpClient())
+            var cookieStorage = new CookieStorageAccessor(jsr);
+            var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
+            //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{httpClient.BaseAddress}{path}");
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            var tempresponce = await httpClient.SendAsync(requestMessage);
+            if (tempresponce.StatusCode == HttpStatusCode.Unauthorized)
             {
-                var cookieStorage = new CookieStorageAccessor(jsr);
-                httpClient.BaseAddress = uri;
-                var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
-                //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress);
-                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
-                var tempresponce = await httpClient.SendAsync(requestMessage);
-                if (tempresponce.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _errorAutorization();
-                }
-                return await tempresponce.Content.ReadFromJsonAsync<T>();
+                _errorAutorization();
             }
+            return await tempresponce.Content.ReadFromJsonAsync<T>();
+            
         }
 
-        public async static Task<Stream> AutorizationedRequest(Uri uri, IJSRuntime jsr)
+        public async static Task<Stream> AutorizationedRequest(string path, HttpClient httpClient, IJSRuntime jsr)
         {
-            using (HttpClient httpClient = new HttpClient())
+            var cookieStorage = new CookieStorageAccessor(jsr);
+            var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
+            //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{httpClient.BaseAddress}{path}");
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            var tempresponce = await httpClient.SendAsync(requestMessage);
+            if (tempresponce.StatusCode == HttpStatusCode.Unauthorized)
             {
-                var cookieStorage = new CookieStorageAccessor(jsr);
-                httpClient.BaseAddress = uri;
-                var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
-                //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress);
-                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
-                var tempresponce = await httpClient.SendAsync(requestMessage);
-                if (tempresponce.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _errorAutorization();
-                }
-                return await tempresponce.Content.ReadAsStreamAsync();
+                _errorAutorization();
             }
+            return await tempresponce.Content.ReadAsStreamAsync();
         }
 
-        public async static Task<T> AutorizationedPostRequest<T, C>(Uri uri, IJSRuntime jsr, C Date)
+        public async static Task<T> AutorizationedPostRequest<T, C>(string path, HttpClient httpClient, IJSRuntime jsr, C Date)
         {
-            using (HttpClient httpClient = new HttpClient())
-            {
                 var cookieStorage = new CookieStorageAccessor(jsr);
-                httpClient.BaseAddress = uri;
                 var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
                 //Console.WriteLine("Path2: " + IPaddress.helper+" "+IPaddress.IPAddress);
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, httpClient.BaseAddress);
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{httpClient.BaseAddress}{path}");
                 requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
                 requestMessage.Content = JsonContent.Create(Date);
 

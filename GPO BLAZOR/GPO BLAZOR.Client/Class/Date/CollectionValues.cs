@@ -12,25 +12,26 @@ namespace GPO_BLAZOR.Client.Class.Date
     {
         
         string? ID { get; set; }
-        private CollectionValues(string[] value, string? ID = null)
+        private CollectionValues(string[] value, HttpClient httpClient, string? ID = null)
         {
 
             this.ID = ID;
+            this.httpClient = httpClient;
             if (value != null)
                 Values = value;
             else Values = null;
         }
 
         public string[] Values { get; init; }
-
-        public static async Task<CollectionValues> Create(string Name, IJSRuntime jsr, string? ID = null)
+        private HttpClient httpClient { get; set; }
+        public static async Task<CollectionValues> Create(string Name, IJSRuntime jsr, HttpClient httpClient, string? ID = null)
         {
-            return new CollectionValues(await GetAtributes(Name, jsr, ID));
+            return new CollectionValues(await GetAtributes(Name, jsr, httpClient, ID), httpClient);
         }
 
-        private static async Task<string[]> GetAtributes(string Field, IJSRuntime jsr, string? ID = null)
+        private static async Task<string[]> GetAtributes(string Field, IJSRuntime jsr, HttpClient httpClient, string? ID = null)
         {
-            return await Requesting.AutorizationedGetRequest<string[]>(new Uri($"https://{IPaddress.IPAddress}/GetAtributes/{Field}{(ID is null?"":$"?ID={ID}")}"), jsr);
+            return await Requesting.AutorizationedGetRequest<string[]>(Field, httpClient, jsr);
         }
 
     }
