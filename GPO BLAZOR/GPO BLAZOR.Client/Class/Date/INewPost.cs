@@ -12,7 +12,7 @@ namespace GPO_BLAZOR.Client.Class.Date
 
     public class NewPost : INewPost
     {
-        public static async Task<INewPost> Create (NavigationManager Navigator, IJSRuntime jsr)
+        public static async Task<INewPost> Create (NavigationManager Navigator, IJSRuntime jsr, HttpClient httpClient)
         {
             NewPost newpost = new NewPost(Navigator, jsr);
             try
@@ -20,8 +20,9 @@ namespace GPO_BLAZOR.Client.Class.Date
                 try
                 {
                     var values = (async () => (await Requesting.AutorizationedGetRequest<string[]>(
-                            new Uri($"https://{IPaddress.IPAddress}/GetAtributes/Postlist"),
-                            newpost.JSRuntime)));
+                            "/GetAtributes/Postlist",
+                            httpClient,
+                            jsr)));
                     newpost._fields = await values();
                 }
                 catch (Exception ex)

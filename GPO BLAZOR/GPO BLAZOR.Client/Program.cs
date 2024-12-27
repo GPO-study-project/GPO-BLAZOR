@@ -2,6 +2,7 @@ using GPO_BLAZOR.Client.Class.Date;
 using GPO_BLAZOR.Client.Class.JSRunTimeAccess;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using MigraDoc.Rendering;
 
 namespace GPO_BLAZOR.Client
@@ -17,7 +18,8 @@ namespace GPO_BLAZOR.Client
             builder.Services.AddScoped<CookieStorageAccessor>();
             builder.Services.AddScoped<LocalStorageAccessor>();
             builder.Services.AddScoped<PdfDocumentRenderer>();
-            builder.Services.AddSingleton<HttpClient>(new HttpClient() { BaseAddress = new Uri (builder.HostEnvironment.BaseAddress) });
+
+            builder.Services.AddSingleton<HttpClient>(new HttpClient() { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress.Trim('/')) });
 
             var app = builder.Build();
 

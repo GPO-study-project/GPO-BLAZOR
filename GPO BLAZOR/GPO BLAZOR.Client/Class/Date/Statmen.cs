@@ -25,6 +25,7 @@ namespace GPO_BLAZOR.Client.Class.Date
         private string _Template = null!;
         public int State { get; set; }
         public Page[] Date { get; set; }
+        private HttpClient _httpClient;
 
         private string Id 
         {
@@ -57,7 +58,7 @@ namespace GPO_BLAZOR.Client.Class.Date
             return AddId(result);
         }
 
-        public async static Task<IStatmen> Create(string id, IJSRuntime jsr, string StatmenType)
+        public async static Task<IStatmen> Create(string id, IJSRuntime jsr, string StatmenType, HttpClient httpClient)
         {
             Dictionary<string, string> values;
             try
@@ -66,7 +67,8 @@ namespace GPO_BLAZOR.Client.Class.Date
                 Console.WriteLine("Statmen Id "+id);
 #endif
                 values = await Requesting.AutorizationedGetRequest<Dictionary<string, string>>(
-                        new Uri($"https://{IPaddress.IPAddress}/getformDate?ID={id}&Type={StatmenType}"),
+                        $"/getformDate?ID={id}&Type={StatmenType}",
+                        httpClient,
                         jsr);
             }
             catch (Exception ex)
@@ -88,8 +90,10 @@ namespace GPO_BLAZOR.Client.Class.Date
                     if (!values.ContainsKey("Template"))
                         values.Add("Template", values["template"]);
                     var tempTemplates = addId(await Requesting.AutorizationedGetRequest<Statmen>(
-                        new Uri($"https://{IPaddress.IPAddress}/getTepmlate/{values["Template"]}"),
+                        $"/getTepmlate/{values["Template"]}",
+                        httpClient,
                         jsr), id);
+                    tempTemplates._httpClient = httpClient;
                     tempTemplates._id = id;
                     tempTemplates._Template = values["Template"];
                     tempTemplates.State = Int32.Parse(values["State"]);
@@ -162,8 +166,8 @@ namespace GPO_BLAZOR.Client.Class.Date
 #endif
                 temp.TryAdd(item.Key, item.Value.value);
             }
-            Uri uri = new Uri($"https://{IPaddress.IPAddress}/getInfo?ID={_id}&Template={_Template}");
-            var result = await Requesting.AutorizationedPostRequest<string, Dictionary<string, string>>(uri, jsr, temp);
+            string path = $"getInfo?ID={_id}&Template={_Template}";
+            var result = await Requesting.AutorizationedPostRequest<string, Dictionary<string, string>>(path, _httpClient, jsr, temp);
 
             //var a = (httpClient.Send(new HttpRequestMessage())).Content.ReadAsStream();
 

@@ -10,7 +10,7 @@ namespace GPO_BLAZOR.Client.Class.Field
         public IField Date { get; set; }
 
         [Inject]
-        public HttpClient HttpClient { get; init; }
+        public HttpClient _httpClient { get; init; }
 
         protected override Task OnAfterRenderAsync(bool firstRender)
         {

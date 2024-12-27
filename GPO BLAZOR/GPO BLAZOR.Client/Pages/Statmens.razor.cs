@@ -23,6 +23,8 @@ namespace GPO_BLAZOR.Client.Pages
         IJSRuntime jsr { get; set; }
         [Inject]
         Navigation Navigation { get; set; }
+        [Inject]
+        HttpClient httpClient { get; set; } 
 
         [Parameter]
         public EventCallback<(string, int)> ViemStatmen { get; set; }
@@ -38,7 +40,7 @@ namespace GPO_BLAZOR.Client.Pages
 
             try
             {
-                Date ??= await StatmenTableModel.Create(jsr);
+                Date ??= await StatmenTableModel.Create(jsr, httpClient);
             }
             catch (Exception ex)
             {

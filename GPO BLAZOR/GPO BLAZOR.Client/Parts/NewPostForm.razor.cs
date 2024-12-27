@@ -18,7 +18,7 @@ namespace GPO_BLAZOR.Client.Parts
         {
             try
             {
-                postModel = await NewPost.Create(Navigator, jsr);
+                postModel = await NewPost.Create(Navigator, jsr, _httpClient);
                 action = postModel.Fields.First().Value;
             }
             catch (Exception ex)
@@ -29,6 +29,8 @@ namespace GPO_BLAZOR.Client.Parts
         }
         [Parameter]
         public NavigationManager Navigator { get; set;}
+        [Inject]
+        HttpClient _httpClient { get; set;}
         string actionWord { get; set; } 
         Func<Task> action { get; set; } = () => null;
         

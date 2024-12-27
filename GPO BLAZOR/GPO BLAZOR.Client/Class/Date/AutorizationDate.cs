@@ -178,7 +178,7 @@ namespace GPO_BLAZOR.Client.Class.Date
                 Console.WriteLine("Start jwt Synchronistaion");
 #endif
                 
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}/newJWT");
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}newJWT");
 #if DEBUG
                 Console.WriteLine("InWhile");
 #endif
@@ -255,7 +255,7 @@ namespace GPO_BLAZOR.Client.Class.Date
         /// Отправка данных и запись оных в внутреннее хранилище
         /// </summary>
         /// <returns></returns>
-        public async Task SendDate(System.Timers.Timer timer, IAutorizationStruct autorizer)
+        public Task SendDate(System.Timers.Timer timer, IAutorizationStruct autorizer)
             ///Отправка
         {
 
@@ -270,11 +270,11 @@ namespace GPO_BLAZOR.Client.Class.Date
             try
             {
                 ////Отправка запроса
-                using Task<HttpResponseMessage> response = _httpClient.PostAsync($"{_httpClient.BaseAddress}/autorization", content);
+                using Task<HttpResponseMessage> response = _httpClient.PostAsync($"{_httpClient.BaseAddress}autorization", content);
 #if DEBUG
                 Console.WriteLine($"Запрос на авторизацию {content.Value} + -> "+sentDate.login + "->" + Name);
 #endif
-                await response.ContinueWith(response =>
+                return response.ContinueWith(response =>
                 {
                     Task t2responce = null;
                     ///Проверка ответа
@@ -356,8 +356,11 @@ namespace GPO_BLAZOR.Client.Class.Date
             }
             catch (Exception ex)
             {
-                ErrorInAutorization();
-                Console.WriteLine($"Cookie Interfase SendDate -> " + ex.Message);
+                return new Task(() =>
+                {
+                    ErrorInAutorization();
+                    Console.WriteLine($"Cookie Interfase SendDate -> " + ex.Message);
+                });
             }
         }
 

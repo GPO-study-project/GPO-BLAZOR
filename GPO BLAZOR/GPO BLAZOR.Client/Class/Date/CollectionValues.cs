@@ -24,14 +24,15 @@ namespace GPO_BLAZOR.Client.Class.Date
 
         public string[] Values { get; init; }
         private HttpClient httpClient { get; set; }
-        public static async Task<CollectionValues> Create(string Name, IJSRuntime jsr, HttpClient httpClient, string? ID = null)
+        public static Task<CollectionValues> Create(string Name, IJSRuntime jsr, HttpClient httpClient, string? ID = null)
         {
-            return new CollectionValues(await GetAtributes(Name, jsr, httpClient, ID), httpClient);
+            var AttributesTask = GetAtributes(Name, jsr, httpClient, ID);
+            return AttributesTask.ContinueWith(x=> new CollectionValues(x.Result , httpClient));
         }
 
-        private static async Task<string[]> GetAtributes(string Field, IJSRuntime jsr, HttpClient httpClient, string? ID = null)
+        private static Task<string[]> GetAtributes(string Field, IJSRuntime jsr, HttpClient httpClient, string? ID = null)
         {
-            return await Requesting.AutorizationedGetRequest<string[]>(Field, httpClient, jsr);
+            return Requesting.AutorizationedGetRequest<string[]>($"GetAtributes/{Field}", httpClient, jsr);
         }
 
     }

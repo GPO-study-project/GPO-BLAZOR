@@ -8,6 +8,7 @@ namespace GPO_BLAZOR.Client.Class.Date
     {
         private IJSRuntime jsr { init; get; }
         private IStatmenTableLineModel[] _lines;
+        private HttpClient _httpClient;
 
         public IStatmenTableLineModel[] Lines
         {
@@ -28,14 +29,15 @@ namespace GPO_BLAZOR.Client.Class.Date
             Lines = components;
         }
 
-        static async public Task<StatmenTableModel> Create(IJSRuntime jsr, string? token = null)
+        static async public Task<StatmenTableModel> Create(IJSRuntime jsr, HttpClient httpClient, string? token = null)
         {
-            return new StatmenTableModel(await GetLines(token, jsr), jsr);
+            return new StatmenTableModel(await GetLines(token, jsr, httpClient), jsr);
         }
 
-        private StatmenTableModel(string token)
+        private StatmenTableModel(string token, HttpClient httpClient)
         {
-            var response = GetLines(token, jsr);
+            _httpClient = httpClient;
+            var response = GetLines(token, jsr, _httpClient);
 
             while (!response.IsCompleted)
             {
@@ -45,10 +47,11 @@ namespace GPO_BLAZOR.Client.Class.Date
 
         }
 
-        private static async Task<IStatmenTableLineModel[]> GetLines(string? token, IJSRuntime jsr)
+        private static async Task<IStatmenTableLineModel[]> GetLines(string? token, IJSRuntime jsr, HttpClient httpClient)
         {
             var response = await Requesting.AutorizationedGetRequest<StatmenTableLineModel[]>(
-                new Uri($"https://{IPaddress.IPAddress}/getstatmens/user:{(token != null ? "token" : "-")}"),
+                $"getstatmens/user:{(token != null ? "token" : "-")}",
+                httpClient,
                 jsr);
 
             int calculator = 0;

@@ -62,7 +62,8 @@ namespace GPO_BLAZOR.Client.Class.Field
     {
         [Inject]
         IJSRuntime JSRuntime { get; set; }
-
+        [Inject]
+        HttpClient httpClient { get; set;}
         [Parameter]
         //[EditorRequired]
         public string TemplateName { get; set; }
@@ -88,7 +89,7 @@ namespace GPO_BLAZOR.Client.Class.Field
         {
 
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(PdfFilePrinting.DocumentService.Document));
-            var reques = await Date.Requesting.AutorizationedRequest(new Uri($"https://{IPaddress.IPAddress}/GetPrintAtribute/{TemplateName}"), JSRuntime);
+            var reques = await Date.Requesting.AutorizationedRequest($"/GetPrintAtribute/{TemplateName}", httpClient, JSRuntime);
             var result = xmlSerializer.Deserialize(reques) as PdfFilePrinting.DocumentService.Document?;
 
             PdfDocumentRenderer pdfDocumentRenderer = new PdfDocumentRenderer();

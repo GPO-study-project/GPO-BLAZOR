@@ -19,6 +19,8 @@ namespace GPO_BLAZOR.Client.Pages
 
         [Inject]
         IAutorizationStruct? Autorizer { get; set; }
+        [Inject]
+        HttpClient _httpClient { get; init; }
 
         [Parameter]
         public EventCallback<IAuthorizationDate> AuthorizationInterfaceChanged { get; set; }
@@ -81,7 +83,7 @@ namespace GPO_BLAZOR.Client.Pages
 #if DEBUG
                         Console.WriteLine("CheckCookie");
 #endif
-                        AuthorizationInterface = new AuthorizationDate(ReadCookies, WriteCookies);
+                        AuthorizationInterface = new AuthorizationDate(ReadCookies, WriteCookies, _httpClient);
                         await AuthorizationInterface.GetValues(ReadCookies, timer, Autorizer);
                         await AuthorizationInterfaceChanged.InvokeAsync(AuthorizationInterface);
                     }
@@ -127,7 +129,7 @@ namespace GPO_BLAZOR.Client.Pages
         {
             base.OnParametersSet();
             if (AuthorizationInterface._writer==null)
-            AuthorizationInterface = new AuthorizationDate(ReadCookies, WriteCookies);
+            AuthorizationInterface = new AuthorizationDate(ReadCookies, WriteCookies, _httpClient);
         }
 
 

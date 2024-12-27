@@ -8,7 +8,7 @@ namespace GPO_BLAZOR.Client.Class.Date
 {
     public static class Requesting
     {
-        static Requesting ()
+        static Requesting()
         {
             Action A = () =>
             {
@@ -19,12 +19,13 @@ namespace GPO_BLAZOR.Client.Class.Date
         static private Action? _errorAutorization;
         static public event Action ErrorAutorization
         {
-            add => _errorAutorization+=value;
+            add => _errorAutorization += value;
             remove => _errorAutorization -= value;
         }
 
-        public async static Task<T> AutorizationedGetRequest<T> (string path, HttpClient httpClient, IJSRuntime jsr)
+        public async static Task<T> AutorizationedGetRequest<T>(string path, HttpClient httpClient, IJSRuntime jsr)
         {
+            path = path.TrimStart('/');
             var cookieStorage = new CookieStorageAccessor(jsr);
             var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
             //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
@@ -36,11 +37,12 @@ namespace GPO_BLAZOR.Client.Class.Date
                 _errorAutorization();
             }
             return await tempresponce.Content.ReadFromJsonAsync<T>();
-            
+
         }
 
         public async static Task<Stream> AutorizationedRequest(string path, HttpClient httpClient, IJSRuntime jsr)
         {
+            path = path.TrimStart('/');
             var cookieStorage = new CookieStorageAccessor(jsr);
             var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
             //Console.WriteLine ("Path2: "+ IPaddress.helper + " " + IPaddress.IPAddress);
@@ -56,21 +58,23 @@ namespace GPO_BLAZOR.Client.Class.Date
 
         public async static Task<T> AutorizationedPostRequest<T, C>(string path, HttpClient httpClient, IJSRuntime jsr, C Date)
         {
-                var cookieStorage = new CookieStorageAccessor(jsr);
-                var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
-                //Console.WriteLine("Path2: " + IPaddress.helper+" "+IPaddress.IPAddress);
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{httpClient.BaseAddress}{path}");
-                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
-                requestMessage.Content = JsonContent.Create(Date);
+            path = path.TrimStart('/');
+            var cookieStorage = new CookieStorageAccessor(jsr);
+            var jwt = await cookieStorage.ReadCookieAsync<string>("Autorization");
+            //Console.WriteLine("Path2: " + IPaddress.helper+" "+IPaddress.IPAddress);
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{httpClient.BaseAddress}{path}");
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            requestMessage.Content = JsonContent.Create(Date);
 
-                var tempresponce = await httpClient.SendAsync(requestMessage);
-                if (tempresponce.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _errorAutorization();
-                }
-                return await tempresponce.Content.ReadFromJsonAsync<T>();
+            var tempresponce = await httpClient.SendAsync(requestMessage);
+            if (tempresponce.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _errorAutorization();
             }
+            return await tempresponce.Content.ReadFromJsonAsync<T>();
+
         }
     }
 }
+
 

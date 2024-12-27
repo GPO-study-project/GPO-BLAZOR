@@ -510,6 +510,9 @@ namespace GPO_BLAZOR
             builder.Services.AddScoped<CookieStorageAccessor>();
             builder.Services.AddScoped<LocalStorageAccessor>();
             builder.Services.AddSingleton<IAutorizationStruct, AutorizationStruct>();
+            builder.Services.AddHttpClient();
+            //builder.Services.AddSingleton<HttpClient>(new HttpClient() { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
 
             // Add services to the container.
             builder.Services.AddRazorComponents()

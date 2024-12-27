@@ -23,6 +23,8 @@ namespace GPO_BLAZOR.Client.Pages
         [Parameter]
         [SupplyParameterFromQuery]
         public string Type { get; set; }
+        [Inject]
+        HttpClient  _httpClient { get; set; }
 
         [Parameter]
         public EventCallback Return { get; set; }
@@ -63,10 +65,10 @@ namespace GPO_BLAZOR.Client.Pages
             {
                 string id;
                 if (Number.HasValue)
-                    id = (await StatmenTableModel.Create(jsr)).Lines[Number.Value].id;
+                    id = (await StatmenTableModel.Create(jsr, _httpClient)).Lines[Number.Value].id;
                 else
                     id = "New";
-                 Date = await Class.Date.Statmen.Create(id, jsr, Type);
+                 Date = await Class.Date.Statmen.Create(id, jsr, Type, _httpClient);
                  SelectedPage = Date.Date.First();
             }
             catch (Exception ex)
