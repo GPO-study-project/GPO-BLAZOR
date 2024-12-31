@@ -166,6 +166,11 @@ namespace GPO_BLAZOR.Client.Class.Date
             await RewriteJWT();
         }
 
+        private string S (Task (string a) B)
+        {
+
+        }
+
         /// <summary>
         /// Обновление  JWT
         /// </summary>
@@ -274,7 +279,7 @@ namespace GPO_BLAZOR.Client.Class.Date
 #if DEBUG
                 Console.WriteLine($"Запрос на авторизацию {content.Value} + -> "+sentDate.login + "->" + Name);
 #endif
-                return response.ContinueWith(response =>
+                return response.ContinueWith((Task<HttpResponseMessage> response) =>
                 {
                     Task t2responce = null;
                     ///Проверка ответа
@@ -339,24 +344,29 @@ namespace GPO_BLAZOR.Client.Class.Date
                     {
                         Console.WriteLine($"Response Autorization Error -> {ex.Message}");
                     }
-#if DEBUG
-                    
-                    var t3responce = t2responce.ContinueWith(async responseFinnaly =>
-                    {
-                        string responseText = await response
-                            .Result.Content.ReadAsStringAsync();
 
-                        if (responseText != null && responseText != "")
-                            Console.WriteLine("Финальный блок авторизации: " + responseText);
-                    }).Unwrap();
-                    return t3responce;
-                    
-                });
+
+                    var t3responce = response.ContinueWith(responseFinnaly =>
+                    {
+                        return responseFinnaly.Result.Content.ReadAsStringAsync();
+                    }).Unwrap()
+                    .ContinueWith(responseText =>
+                    { 
+
+                        if (responseText.Result != null && responseText.Result != "")
+#if DEBUG
+                            Console.WriteLine("Финальный блок авторизации: " + responseText.Re);
 #endif
+                    });
+
+                    return Task.WhenAll(t3responce, t2responce);
+                    
+                }).Unwrap();
+
             }
             catch (Exception ex)
             {
-                return new Task(() =>
+                return Task.Factory.StartNew(() =>
                 {
                     ErrorInAutorization();
                     Console.WriteLine($"Cookie Interfase SendDate -> " + ex.Message);
@@ -369,21 +379,26 @@ namespace GPO_BLAZOR.Client.Class.Date
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public async Task Send(string value, System.Timers.Timer timer, IAutorizationStruct autorizaer)
+        public Task Send(string value, System.Timers.Timer timer, IAutorizationStruct autorizaer)
         {
             try
             {
-                await SendDate(timer, autorizaer);
-                string temp = await _reader("Autorization") ?? "";
-                if (temp != "")
-                {
-                    IsCookies = true;
 
-                    
+                return SendDate(timer, autorizaer)
+                    .ContinueWith(task =>
+                        _reader("Autorization"))
+                    .Unwrap()
+                    .ContinueWith(task=>task.Result ?? "")
+                    .ContinueWith(task =>
+                    {
+                        if (task.Result != "")
+                        {
+                            IsCookies = true;
 #if DEBUG
-                    Console.WriteLine("Set CookieTrue");
+                            Console.WriteLine("Set CookieTrue");
 #endif
-                }
+                        }
+                    });
                 /*else
                 {
                     _writer(value);
@@ -391,8 +406,11 @@ namespace GPO_BLAZOR.Client.Class.Date
             }
             catch (Exception ex)
             {
-                ErrorInAutorization();
-                Console.WriteLine("Cookie Interfase Send -> "+ex.Message);
+                return Task.Factory.StartNew(() =>
+                {
+                    ErrorInAutorization();
+                    Console.WriteLine("Cookie Interfase Send -> " + ex.Message);
+                });
             }
         }
     }

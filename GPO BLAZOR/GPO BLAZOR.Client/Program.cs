@@ -24,12 +24,6 @@ namespace GPO_BLAZOR.Client
             var app = builder.Build();
 
 
-            var c = builder.HostEnvironment.BaseAddress;
-
-            IPaddress.helper = c;
-            var uri = new Uri(c);
-            IPaddress.IPAddress = uri.Host + (uri.Port == null || uri.Port == 0 ? "": ":"+uri.Port);
-
             //Console.WriteLine("BaseAddress "+ c);
 
             //app.UseCors(builder => builder.WithOrigins("https://surnameonline.ru/").WithMethods("POST").AllowAnyHeader());

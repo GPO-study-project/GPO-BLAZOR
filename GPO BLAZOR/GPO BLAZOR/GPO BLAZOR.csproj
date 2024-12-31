@@ -25,17 +25,6 @@
     <None Remove="wwwroot\Новая папка\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Remove="wwwroot\Fonts\arial.ttf" />
-    <Content Remove="wwwroot\Fonts\arialbd.ttf" />
-    <Content Remove="wwwroot\Fonts\arialbi.ttf" />
-    <Content Remove="wwwroot\Fonts\ariali.ttf" />
-    <Content Remove="wwwroot\Fonts\times.ttf" />
-    <Content Remove="wwwroot\Fonts\timesbd.ttf" />
-    <Content Remove="wwwroot\Fonts\timesbi.ttf" />
-    <Content Remove="wwwroot\Fonts\timesi.ttf" />
-  </ItemGroup>
-
 <ItemGroup>
     <ProjectReference Include="..\..\DBAccess\DBAccess.csproj" />
     <ProjectReference Include="..\..\PdfFilePrinting\PdfFilePrinting.csproj" />
@@ -67,17 +56,6 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\bootstrap\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\Fonts\arial.ttf" />
-    <None Include="wwwroot\Fonts\arialbd.ttf" />
-    <None Include="wwwroot\Fonts\arialbi.ttf" />
-    <None Include="wwwroot\Fonts\ariali.ttf" />
-    <None Include="wwwroot\Fonts\times.ttf" />
-    <None Include="wwwroot\Fonts\timesbd.ttf" />
-    <None Include="wwwroot\Fonts\timesbi.ttf" />
-    <None Include="wwwroot\Fonts\timesi.ttf" />
   </ItemGroup>
 
 </Project>

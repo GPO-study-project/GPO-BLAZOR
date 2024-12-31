@@ -54,17 +54,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\fonts\arial.ttf" />
-    <None Include="wwwroot\fonts\arialbd.ttf" />
-    <None Include="wwwroot\fonts\arialbi.ttf" />
-    <None Include="wwwroot\fonts\ariali.ttf" />
-    <None Include="wwwroot\fonts\times.ttf" />
-    <None Include="wwwroot\fonts\timesbd.ttf" />
-    <None Include="wwwroot\fonts\timesbi.ttf" />
-    <None Include="wwwroot\fonts\timesi.ttf" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\PdfFilePrinting\PdfFilePrinting.csproj" />
     <ProjectReference Include="..\..\PdfFilePrinting\PdfFilePrinting.csproj" />
   </ItemGroup>
