@@ -2,8 +2,19 @@
 
 <body>
     <div>
-        <input type="search" @bind-value=@SearchField/> 
+        <input type="search" @bind-value=@SearchField @bind-value:after="Action1" />
     </div>
+    <input type="button" name="Поиск" aria-busy="true"/>
+    <InputSelect @bind-Value=_actualValue>
+
+    </InputSelect>
+
 </body>
+
+@code{
+    CancellationTokenSource _tokenSource;
+    
+
+}
 
 

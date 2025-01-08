@@ -92,7 +92,7 @@ public partial class Gpo2Context : DbContext
 
     static Gpo2Context()
     {
-        FileStream fs = new FileStream("./DBOutput.txt", FileMode.OpenOrCreate);
+        FileStream fs = new FileStream("./DBOutput.log", FileMode.OpenOrCreate);
         strwr = new StreamWriter(fs);
     }
 

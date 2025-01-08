@@ -592,20 +592,20 @@ namespace PdfFilePrinting.DocumentService
                 {
                     return Name;
                 }
-                HttpClient htpc = new HttpClient();
-                htpc.BaseAddress = new Uri("https://surnameonline.ru");
-                htpc.DefaultRequestHeaders.Host = "surnameonline.ru";
-                htpc.DefaultRequestHeaders.Add("Origin", new[] { "https://surnameonline.ru" });
-                htpc.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-                htpc.DefaultRequestHeaders.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("UTF8"));
+                HttpClient httpClient = new HttpClient();
+                httpClient.BaseAddress = new Uri("https://surnameonline.ru");
+                httpClient.DefaultRequestHeaders.Host = "surnameonline.ru";
+                httpClient.DefaultRequestHeaders.Add("Origin", new[] { "https://surnameonline.ru" });
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+                httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("UTF8"));
                 //htpc.DefaultRequestHeaders.Add("Content-Type", new[] { , "charset=UTF-8" });
-                htpc.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
-                htpc.DefaultRequestHeaders.Add("mode", "no-cors");
-                htpc.DefaultRequestHeaders.Add("Access-Control-Allow-Origin", "*");
+                httpClient.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
+                httpClient.DefaultRequestHeaders.Add("mode", "no-cors");
+                httpClient.DefaultRequestHeaders.Add("Access-Control-Allow-Origin", "*");
 
-                htpc.DefaultRequestHeaders.Referrer = new Uri("https://surnameonline.ru");
+                httpClient.DefaultRequestHeaders.Referrer = new Uri("https://surnameonline.ru");
                 //htpc.DefaultRequestHeaders.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-                htpc.BaseAddress = new Uri("https://surnameonline.ru/");
+                httpClient.BaseAddress = new Uri("https://surnameonline.ru/");
                 string[] Values = Name.Split(' ');
                 if (Values.Length < 3)
                 { Values = new string[3] { "Иван", "Иванов", "Иванович" }; };
@@ -617,7 +617,7 @@ namespace PdfFilePrinting.DocumentService
 #if DEBUG
                 Console.WriteLine(responce);
 #endif
-                var result = await htpc.SendAsync(responce);
+                var result = await httpClient.SendAsync(responce);
 
 
                 var result3 = await result.Content.ReadAsStringAsync();
