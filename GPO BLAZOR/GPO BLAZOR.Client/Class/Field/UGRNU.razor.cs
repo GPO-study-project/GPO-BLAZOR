@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace GPO_BLAZOR.Client.Class.Field
 {
@@ -10,6 +11,7 @@ namespace GPO_BLAZOR.Client.Class.Field
         private string SearchField { get; set; }
         record class FactoryValue
         {
+            [JsonPropertyName("n")]
             public string Name { get; init; }
             public string LeaderName { get; init; }
         }
