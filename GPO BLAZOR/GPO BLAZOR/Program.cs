@@ -530,16 +530,6 @@ namespace GPO_BLAZOR
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("MyPolicy", opt =>
-                {
-                    opt.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                        //.AllowCredentials();
-                });
-            });
 
             builder.Services.AddScoped<AuthenticationStateProvider, IdentetyAuthenticationStateProvider>();
 
@@ -616,8 +606,6 @@ namespace GPO_BLAZOR
             app.UseStaticFiles();
             app.UseAntiforgery();
             app.UseAuthorization();
-
-            app.UseCors("MyPolicy");
 
             app.MapGet("/CaseWaord", async (PdfFilePrinting.DocumentService.WordCase wordCase, string Name) =>
                 {

@@ -1,12 +1,22 @@
 ﻿@inherits Field
+@page "/UGRN"
 
 <body>
     <div>
-        <input type="search" @bind-value=@SearchField @bind-value:after="Action1" />
+        <input type="search" @bind-value=@SearchField @bind-value:after="@Search" />
     </div>
     <input type="button" name="Поиск" aria-busy="true"/>
     <InputSelect @bind-Value=_actualValue>
-
+        @foreach (var item in _actualList)
+        {
+            <option value="@item">
+                <div>
+                    Имя: @item.Name
+                    Руководитель: @item.LeaderName
+                    Регион: @item.Region
+                </div>
+            </option>
+        }
     </InputSelect>
 
 </body>

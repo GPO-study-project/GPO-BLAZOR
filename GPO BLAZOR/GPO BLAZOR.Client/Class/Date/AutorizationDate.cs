@@ -166,11 +166,6 @@ namespace GPO_BLAZOR.Client.Class.Date
             await RewriteJWT();
         }
 
-        private string S (Task (string a) B)
-        {
-
-        }
-
         /// <summary>
         /// Обновление  JWT
         /// </summary>
@@ -355,7 +350,7 @@ namespace GPO_BLAZOR.Client.Class.Date
 
                         if (responseText.Result != null && responseText.Result != "")
 #if DEBUG
-                            Console.WriteLine("Финальный блок авторизации: " + responseText.Re);
+                            Console.WriteLine("Финальный блок авторизации: " + responseText.Result);
 #endif
                     });
 
